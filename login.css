@@ -1,0 +1,153 @@
+/* ═══════════════════════════════════════════════════
+   LOGIN PAGE STYLES
+   ═══════════════════════════════════════════════════ */
+body.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px 36px;
+}
+
+.login-brand {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.login-logo {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.login-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 900;
+  font-size: 32px;
+  letter-spacing: -.04em;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.login-sub {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.login-sent-icon {
+  font-size: 48px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.login-sent-text {
+  font-size: 13px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.7;
+  margin-bottom: 20px;
+}
+
+.login-sent-text strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+.login-footer {
+  text-align: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: .08em;
+}
+
+/* Auth input & buttons (shared with timetable auth screen) */
+.auth-input {
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  color: var(--text);
+  outline: none;
+  margin-bottom: 12px;
+  transition: border-color .15s;
+  text-align: center;
+  display: block;
+}
+.auth-input:focus { border-color: var(--accent); }
+
+.auth-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 13px 20px;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #fff;
+  cursor: pointer;
+  transition: opacity .15s;
+  margin-bottom: 10px;
+}
+.auth-btn:hover    { opacity: .88; }
+.auth-btn:disabled { opacity: .55; cursor: default; }
+
+.auth-btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+  padding: 9px;
+}
+
+.auth-error {
+  font-size: 12px;
+  color: var(--danger);
+  min-height: 18px;
+  text-align: center;
+  margin-top: 4px;
+}
+
+.auth-status {
+  text-align: center;
+  font-size: 13px;
+  padding: 12px;
+  border-radius: 8px;
+}
+.auth-status.loading { color: var(--accent);  background: rgba(79,142,247,.08); }
+.auth-status.error   { color: var(--danger);  background: rgba(248,113,113,.08); }
+
+/* Light theme overrides */
+body.light .login-card   { background: var(--surface); }
+body.light .auth-input   { background: rgba(0,0,0,.04); color: var(--text); }
+body.light .auth-btn-ghost { color: var(--muted); }

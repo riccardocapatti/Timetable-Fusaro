@@ -14,44 +14,6 @@
 </head>
 <body>
 
-<!-- AUTH SCREEN -->
-<div id="auth-screen" style="display:flex">
-  <div class="auth-card">
-    <div class="auth-logo">Fusaro Impianti S.r.l.</div>
-    <div class="auth-title">Piano di Lavoro</div>
-
-    <!-- Step 1: enter email -->
-    <div id="auth-step-email">
-      <div class="auth-sub">Inserisci la tua email per ricevere il link di accesso.</div>
-      <input class="auth-input" type="email" id="auth-email-input"
-             placeholder="nome@esempio.it" autocomplete="email" />
-      <button class="auth-btn" id="btn-send-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-          <rect x="2" y="4" width="20" height="16" rx="2"/>
-          <path d="M22 6l-10 7L2 6"/>
-        </svg>
-        Invia link di accesso
-      </button>
-    </div>
-
-    <!-- Step 2: confirmation -->
-    <div id="auth-step-sent" style="display:none">
-      <div style="font-size:40px;margin-bottom:16px">&#128231;</div>
-      <div class="auth-sub" style="margin-bottom:0">
-        Link inviato a<br>
-        <strong id="auth-sent-email"></strong><br><br>
-        Controlla la tua email e clicca il link per accedere.
-      </div>
-      <button class="auth-btn" id="btn-resend"
-              style="margin-top:20px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:12px;padding:8px">
-        Reinvia link
-      </button>
-    </div>
-
-    <div class="auth-error" id="auth-error"></div>
-  </div>
-</div>
-
 <!-- MAIN APP -->
 <div class="container">
 
@@ -100,7 +62,7 @@
       <div class="logo">fusaroimpianti.it</div>
       <div>Adria (RO) &middot; P.IVA 01415100294</div>
       <div>Agg.: 26/04/2026</div>
-      <div>Revisione: 2.0</div>
+      <div>Revisione: 2.1 beta</div>
       <div style="margin-top:8px;display:flex;flex-direction:column;align-items:flex-end;gap:6px">
         <div id="user-badge"></div>
         <div id="sync-bar" style="display:none">
@@ -158,7 +120,7 @@
 
   <footer>
     <span>Fusaro Impianti S.r.l. &mdash; Adria (RO)</span>
-    <span>Piano di Lavoro v2.0 &middot; 2026</span>
+    <span>Piano di Lavoro v2.1 beta &middot; 2026</span>
   </footer>
 </div>
 
@@ -174,9 +136,15 @@
   </div>
 </div>
 
-<!-- App logic (no firebase references) -->
+<!-- Shared config -->
+<script src="firebase-config.js"></script>
+<!-- App logic -->
 <script src="app.js"></script>
-<!-- Firebase auth + realtime DB (loads after app.js so fbSave is accessible) -->
+<!-- Firebase DB operations (per-node) -->
+<script src="db.js"></script>
+<!-- User management & roles -->
+<script src="users.js"></script>
+<!-- Firebase auth guard + subscription -->
 <script src="firebase.js"></script>
 
 </body>

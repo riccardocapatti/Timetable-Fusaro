@@ -104,8 +104,8 @@ function loadData() {
 }
 
 function saveData() {
+  // localStorage fallback (Firebase writes handled by db.js granular functions)
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); } catch(e) {}
-  if (typeof fbSave === "function") fbSave();
 }
 
 let appData = loadData();
@@ -217,6 +217,7 @@ function renderTaskRow(tbody, task, group, c) {
         <span class="task-name" style="border-left:2px solid ${c.color};padding-left:10px">${escHtml(task.name)}</span>
         ${prioBadgeHtml(task.priority)}
         ${dueBadgeHtml(task.dueDate)}
+        ${typeof assignmentBadgeHtml === 'function' ? assignmentBadgeHtml(task) : ''}
         <div class="row-actions">
           <button class="icon-btn" title="Modifica" data-action="edit-task"   data-task="${task.id}" data-group="${group.id}">✎</button>
           <button class="icon-btn danger" title="Elimina" data-action="delete-task" data-task="${task.id}" data-group="${group.id}">✕</button>
@@ -368,7 +369,8 @@ async function renameGroup(gid) {
   attachSwatches();
   if (!result?.label) return;
   g.label = result.label; g.colorIdx = result.colorIdx ?? g.colorIdx;
-  saveData(); render();
+  if (typeof dbSaveGroupMeta === 'function') { dbSaveGroupMeta(g); } else { saveData(); }
+  render();
 }
 
 async function cloneGroup(gid) {
@@ -391,7 +393,8 @@ async function cloneGroup(gid) {
 function deleteGroup(gid) {
   if (!confirm('Eliminare questo gruppo e tutte le sue attività?')) return;
   appData.groups = appData.groups.filter(g=>g.id!==gid);
-  saveData(); render();
+  if (typeof dbDeleteGroup === 'function') { dbDeleteGroup(gid); } else { saveData(); }
+  render();
 }
 
 function toggleGroup(gid) {
@@ -410,6 +413,7 @@ function taskModalBody(t) {
   const due    = t?.dueDate || '';
   const prio   = t?.priority || '';
   const mkOpt  = (v, lbl) => `<input type="radio" class="prio-opt" name="prio-radio" value="${v}" id="pr-${v}" ${prio===v?'checked':''}><label for="pr-${v}">${lbl}</label>`;
+  var assignHtml = (typeof assignmentPickerHtml === 'function' && t) ? assignmentPickerHtml(t) : '';
   return `
     <div class="field-group">
       <label class="field-label">Nome attività</label>
@@ -442,7 +446,8 @@ function taskModalBody(t) {
         <label class="field-label">Scadenza</label>
         <input class="field-input" data-field="dueDate" type="date" value="${escHtml(due)}" style="color-scheme:dark;" />
       </div>
-    </div>`;
+    </div>
+    ${assignHtml}`;
 }
 
 async function addTask(gid) {
@@ -450,12 +455,17 @@ async function addTask(gid) {
   attachGuCalc();
   if (!result?.name) return;
   const group = findGroup(gid); if (!group) return;
-  group.tasks.push({
+  var newTask = {
     id:uid(), name:result.name,
     days:result.days||'—', people:parseFloat(result.people)||1,
-    status:'none', priority:result.priority||'', dueDate:result.dueDate||''
-  });
-  saveData(); render();
+    status:'none', priority:result.priority||'', dueDate:result.dueDate||'',
+    assignedTo:[], order: group.tasks.length,
+    updatedBy: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.uid : '',
+    updatedAt: Date.now()
+  };
+  group.tasks.push(newTask);
+  if (typeof dbSaveTask === 'function') { dbSaveTask(gid, newTask); } else { saveData(); }
+  render();
 }
 
 async function editTask(gid, tid) {
@@ -468,14 +478,25 @@ async function editTask(gid, tid) {
   task.people   = parseFloat(result.people) || 1;
   task.priority = result.priority || '';
   task.dueDate  = result.dueDate  || '';
-  saveData(); render();
+  // Read assignment if capo_cantiere
+  if (typeof readAssignmentFromModal === 'function') {
+    task.assignedTo = readAssignmentFromModal();
+    if (typeof dbSetTaskAssignment === 'function') {
+      dbSetTaskAssignment(gid, tid, task.assignedTo);
+    }
+  }
+  task.updatedBy = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.uid : '';
+  task.updatedAt = Date.now();
+  if (typeof dbSaveTask === 'function') { dbSaveTask(gid, task); } else { saveData(); }
+  render();
 }
 
 function deleteTask(gid, tid) {
   if (!confirm('Eliminare questa attività?')) return;
   const g = findGroup(gid); if (!g) return;
   g.tasks = g.tasks.filter(t=>t.id!==tid);
-  saveData(); render();
+  if (typeof dbDeleteTask === 'function') { dbDeleteTask(gid, tid); } else { saveData(); }
+  render();
 }
 
 function cycleStatus(gid, tid) {
@@ -703,7 +724,6 @@ function deleteTrasferta(id) {
 }
 
 // ─────────────────────────────────────────────
-// INIT
+// INIT — called by firebase.js after auth resolves
 // ─────────────────────────────────────────────
-render();
-renderTrasferte();
+// render() and renderTrasferte() are called from firebase.js → startSubscription()

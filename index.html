@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accesso – Fusaro Impianti</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="login.css">
+</head>
+<body class="login-page">
+
+<div class="login-container">
+  <div class="login-card">
+
+    <div class="login-brand">
+      <div class="login-logo">Fusaro Impianti S.r.l.</div>
+      <h1 class="login-title">Piano di Lavoro</h1>
+      <p class="login-sub">Inserisci la tua email per ricevere il link di accesso.</p>
+    </div>
+
+    <!-- Step 1: enter email -->
+    <div id="auth-step-email">
+      <input class="auth-input" type="email" id="auth-email-input"
+             placeholder="nome@esempio.it" autocomplete="email" />
+      <button class="auth-btn" id="btn-send-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="M22 6l-10 7L2 6"/>
+        </svg>
+        Invia link di accesso
+      </button>
+      <div class="auth-error" id="auth-error"></div>
+    </div>
+
+    <!-- Step 2: link sent confirmation -->
+    <div id="auth-step-sent" style="display:none">
+      <div class="login-sent-icon">&#128231;</div>
+      <p class="login-sent-text">
+        Link inviato a<br>
+        <strong id="auth-sent-email"></strong><br><br>
+        Controlla la tua email e clicca il link per accedere.<br>
+        Puoi chiudere questa scheda.
+      </p>
+      <button class="auth-btn auth-btn-ghost" id="btn-resend">Reinvia link</button>
+    </div>
+
+    <!-- Step 3: confirm email (opened link in different browser) -->
+    <div id="auth-step-confirm" style="display:none">
+      <p class="login-sent-text" style="margin-bottom:16px">
+        Hai aperto il link in un browser diverso.<br>
+        Inserisci di nuovo la tua email per completare l'accesso.
+      </p>
+      <input class="auth-input" type="email" id="auth-confirm-email-input"
+             placeholder="nome@esempio.it" autocomplete="email" />
+      <button class="auth-btn" id="btn-confirm-email">Accedi</button>
+      <div class="auth-error" id="auth-error-confirm"></div>
+    </div>
+
+    <!-- Loading / error status -->
+    <div id="auth-status" style="display:none"></div>
+
+  </div>
+
+  <div class="login-footer">
+    Fusaro Impianti S.r.l. &mdash; Adria (RO) &middot; P.IVA 01415100294
+  </div>
+</div>
+
+<!-- Firebase compat SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="index-auth.js"></script>
+
+</body>
+</html>
