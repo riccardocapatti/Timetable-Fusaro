@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Piano di Lavoro – Fusaro Impianti S.r.l.</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+
+<!-- Firebase compat SDK — must load before app.js and firebase.js -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<!-- AUTH SCREEN -->
+<div id="auth-screen" style="display:flex">
+  <div class="auth-card">
+    <div class="auth-logo">Fusaro Impianti S.r.l.</div>
+    <div class="auth-title">Piano di Lavoro</div>
+
+    <!-- Step 1: enter email -->
+    <div id="auth-step-email">
+      <div class="auth-sub">Inserisci la tua email per ricevere il link di accesso.</div>
+      <input class="auth-input" type="email" id="auth-email-input"
+             placeholder="nome@esempio.it" autocomplete="email" />
+      <button class="auth-btn" id="btn-send-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="M22 6l-10 7L2 6"/>
+        </svg>
+        Invia link di accesso
+      </button>
+    </div>
+
+    <!-- Step 2: confirmation -->
+    <div id="auth-step-sent" style="display:none">
+      <div style="font-size:40px;margin-bottom:16px">&#128231;</div>
+      <div class="auth-sub" style="margin-bottom:0">
+        Link inviato a<br>
+        <strong id="auth-sent-email"></strong><br><br>
+        Controlla la tua email e clicca il link per accedere.
+      </div>
+      <button class="auth-btn" id="btn-resend"
+              style="margin-top:20px;background:transparent;border:1px solid var(--border);color:var(--muted);font-size:12px;padding:8px">
+        Reinvia link
+      </button>
+    </div>
+
+    <div class="auth-error" id="auth-error"></div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div class="container">
+
+  <header>
+    <div>
+      <h1><span>Piano di Lavoro</span>Attività &amp; Tempistiche</h1>
+      <div class="header-actions">
+        <button class="toggle-done-btn" id="btn-toggle-done">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12">
+            <path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/>
+          </svg>
+          Nascondi completate
+        </button>
+        <button class="export-btn" id="btn-theme">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12">
+            <circle cx="8" cy="8" r="3.5"/>
+            <line x1="8" y1="1" x2="8" y2="2.5"/><line x1="8" y1="13.5" x2="8" y2="15"/>
+            <line x1="1" y1="8" x2="2.5" y2="8"/><line x1="13.5" y1="8" x2="15" y2="8"/>
+            <line x1="3" y1="3" x2="4.1" y2="4.1"/><line x1="11.9" y1="11.9" x2="13" y2="13"/>
+            <line x1="13" y1="3" x2="11.9" y2="4.1"/><line x1="4.1" y1="11.9" x2="3" y2="13"/>
+          </svg>
+          Tema chiaro
+        </button>
+        <button class="export-btn" id="btn-export-json">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12">
+            <path d="M4 2h6l3 3v9H4V2z"/><path d="M10 2v3h3"/><path d="M6 9h4M6 11.5h2.5"/>
+          </svg>
+          Esporta JSON
+        </button>
+        <button class="export-btn" id="btn-import-json">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12">
+            <path d="M2 10v4h12v-4M8 2v8M5 7l3 3 3-3"/>
+          </svg>
+          Importa JSON
+        </button>
+        <input type="file" id="import-file-input" accept=".json" style="display:none">
+        <button class="export-btn" id="btn-export-all">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12">
+            <path d="M2 10v4h12v-4M8 2v8M5 7l3 3 3-3"/>
+          </svg>
+          Esporta PDF
+        </button>
+      </div>
+    </div>
+    <div class="meta">
+      <div class="logo">fusaroimpianti.it</div>
+      <div>Adria (RO) &middot; P.IVA 01415100294</div>
+      <div>Agg.: 26/04/2026</div>
+      <div>Revisione: 2.0</div>
+      <div style="margin-top:8px;display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <div id="user-badge"></div>
+        <div id="sync-bar" style="display:none">
+          <span class="sync-dot"></span>
+          <span id="sync-text">—</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="summary">
+    <div class="pill"><span class="pill-label">Totale Attività</span><span class="pill-value" id="pill-total">—</span></div>
+    <div class="pill"><span class="pill-label">Completate</span><span class="pill-value green" id="pill-done">—</span></div>
+    <div class="pill"><span class="pill-label">In corso</span><span class="pill-value yellow" id="pill-partial">—</span></div>
+    <div class="pill"><span class="pill-label">G&middot;U rimanenti</span><span class="pill-value red" id="pill-remaining">—</span></div>
+    <div class="pill"><span class="pill-label">Alta priorità</span><span class="pill-value red" id="pill-high">—</span></div>
+    <div class="pill"><span class="pill-label">Scadenze vicine</span><span class="pill-value yellow" id="pill-due">—</span></div>
+  </div>
+
+  <div class="table-wrap">
+    <table id="main-table">
+      <thead>
+        <tr>
+          <th style="width:34%">Attività</th>
+          <th class="right">Giorni</th>
+          <th class="center">Pers.</th>
+          <th class="right">G&middot;U</th>
+          <th class="right bar-cell">Peso</th>
+          <th class="center" style="width:120px">Stato</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+  <div class="add-group-btn-wrap">
+    <button class="add-group-btn" id="btn-add-group">
+      <span style="font-size:16px;line-height:1">+</span> Aggiungi Gruppo
+    </button>
+  </div>
+
+  <p class="hint">Clicca lo stato per ciclare &nbsp;&middot;&nbsp; &#9658; per espandere/comprimere &nbsp;&middot;&nbsp; Passa il cursore per modificare</p>
+
+  <div class="notes">
+    <div id="trasferte-section"></div>
+    <div>
+      <div class="notes-title">Legenda</div>
+      <div class="note-item"><div class="note-dot" style="background:#a8b2cc"></div>G&middot;U = Giorni &times; Persone (automatico)</div>
+      <div class="note-item"><div class="note-dot" style="background:#52d9a0"></div>Verde = completato</div>
+      <div class="note-item"><div class="note-dot" style="background:#f7c948"></div>Giallo = in corso / parziale</div>
+      <div class="note-item"><div class="note-dot" style="background:#f87171"></div>Alta priorità</div>
+      <div class="note-item"><div class="note-dot" style="background:#fbbf24"></div>Media priorità</div>
+    </div>
+  </div>
+
+  <footer>
+    <span>Fusaro Impianti S.r.l. &mdash; Adria (RO)</span>
+    <span>Piano di Lavoro v2.0 &middot; 2026</span>
+  </footer>
+</div>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal" style="display:none">
+  <div class="modal">
+    <div class="modal-title" id="modal-title"></div>
+    <div id="modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" id="modal-cancel">Annulla</button>
+      <button class="btn-confirm" id="modal-confirm">Salva</button>
+    </div>
+  </div>
+</div>
+
+<!-- App logic (no firebase references) -->
+<script src="app.js"></script>
+<!-- Firebase auth + realtime DB (loads after app.js so fbSave is accessible) -->
+<script src="firebase.js"></script>
+
+</body>
+</html>
