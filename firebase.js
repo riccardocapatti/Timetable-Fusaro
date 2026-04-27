@@ -49,30 +49,41 @@ function setSyncStatus(state, text) {
 function fbSave() {}
 
 // ── Check DB version, migrate if needed ───────────────────────
+// ── Check DB version, migrate if needed ───────────────────────────
 function checkAndMigrate() {
-  setSyncStatus("syncing", "Connessione\u2026");
+  setSyncStatus("syncing", "Connessione…");
 
-  dbRef("groups").once("value", function(snap) {
-    if (snap.exists()) {
-      startSubscription();
-    } else {
-      // Check for v1 data to migrate
-      firebase.database().ref("piano/v1").once("value", function(v1snap) {
-        var v1 = v1snap.val();
-        if (v1 && v1.groups && v1.groups.length) {
-          setSyncStatus("syncing", "Migrazione dati\u2026");
-          dbMigrateFromV1(v1).then(startSubscription);
-        } else {
-          // Truly first run — push default data
-          dbPushDefaultData().then(startSubscription);
-        }
-      });
-    }
-  }, function(err) {
-    console.error("DB check error:", err);
-    setSyncStatus("error", "Errore connessione");
-    showLoading(false);
-  });
+  dbRef("groups").once("value")
+    .then(function(snap) {
+      if (snap.exists()) {
+        startSubscription();
+        return;
+      }
+      // No v2 data yet — check for v1
+      setSyncStatus("syncing", "Controllo dati precedenti…");
+      return firebase.database().ref("piano/v1/groups").once("value")
+        .then(function(v1groupsSnap) {
+          if (v1groupsSnap.exists()) {
+            setSyncStatus("syncing", "Migrazione dati…");
+            return firebase.database().ref("piano/v1").once("value")
+              .then(function(v1snap) {
+                return dbMigrateFromV1(v1snap.val());
+              })
+              .then(function() {
+                setSyncStatus("synced", "Migrazione completata ✓");
+                startSubscription();
+              });
+          } else {
+            // First run, no previous data — start empty
+            startSubscription();
+          }
+        });
+    })
+    .catch(function(err) {
+      console.error("DB check error:", err);
+      setSyncStatus("error", "Errore: " + err.message);
+      showLoading(false);
+    });
 }
 
 // ── Realtime subscription ─────────────────────────────────────
