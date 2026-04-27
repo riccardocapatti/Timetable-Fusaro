@@ -81,34 +81,13 @@ function makeDefaultData() {
 // ─────────────────────────────────────────────
 // PERSISTENCE
 // ─────────────────────────────────────────────
-function loadData() {
-  try {
-    const s = localStorage.getItem(STORAGE_KEY);
-    if (!s) return makeDefaultData();
-    const d = JSON.parse(s);
-    // migrate: ensure new fields exist
-    d.groups.forEach(g => {
-      if (g.collapsed === undefined) g.collapsed = false;
-      g.tasks.forEach(t => {
-        if (!t.priority) t.priority = '';
-        if (!t.dueDate)  t.dueDate  = '';
-        if (t.people === undefined) t.people = 1;
-        if (typeof t.people === 'string') {
-          const n = parseInt(t.people.replace(/[^\d]/g,''));
-          t.people = isNaN(n) ? 1 : n;
-        }
-      });
-    });
-    return d;
-  } catch { return makeDefaultData(); }
-}
-
 function saveData() {
-  // localStorage fallback (Firebase writes handled by db.js granular functions)
+  // localStorage fallback only (Firebase writes via db.js)
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(appData)); } catch(e) {}
 }
 
-let appData = loadData();
+// appData starts empty — populated by firebase.js after auth
+var appData = { groups: [], trasferte: [] };
 
 // ─────────────────────────────────────────────
 // HELPERS
@@ -723,7 +702,4 @@ function deleteTrasferta(id) {
   saveData(); renderTrasferte();
 }
 
-// ─────────────────────────────────────────────
-// INIT — called by firebase.js after auth resolves
-// ─────────────────────────────────────────────
-// render() and renderTrasferte() are called from firebase.js → startSubscription()
+

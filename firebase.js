@@ -4,68 +4,79 @@
 // ═══════════════════════════════════════════════════════════
 firebase.initializeApp(FIREBASE_CONFIG);
 
-// fbSave is called by app.js saveData() for backwards compat
-// In v2 we use granular db.js functions instead, but keep this
-// as a safety net for the JSON import flow.
-function fbSave() {
-  // No-op: all saves now go through db.js granular functions.
-  // JSON import calls dbPushDefaultData() directly.
-}
+// ── Show loading overlay until data arrives ───────────────────
+showLoading(true);
 
 // ── Auth guard ────────────────────────────────────────────────
 firebase.auth().onAuthStateChanged(function(user) {
   if (!user) {
-    // Not signed in — send to login page
     window.location.href = INDEX_URL;
     return;
   }
 
-  // Signed in — load user profile, then data
+  // Load user profile → optionally load all users → check DB
   loadCurrentUser(user)
     .then(function() {
-      if (isCapoCantiere()) {
-        return loadAllUsers(); // preload for assignment picker
-      }
+      if (isCapoCantiere()) return loadAllUsers();
     })
     .then(function() {
       checkAndMigrate();
     })
     .catch(function(err) {
-      console.error("User load error:", err);
-      setSyncStatus("error", "Errore caricamento utente");
+      console.error("Startup error:", err);
+      setSyncStatus("error", "Errore avvio");
+      showLoading(false);
     });
 });
 
-// ── Check if DB has data, migrate from v1 if needed ──────────
+// ── Loading overlay ───────────────────────────────────────────
+function showLoading(show) {
+  var el = document.getElementById("loading-overlay");
+  if (el) el.style.display = show ? "flex" : "none";
+}
+
+// ── Sync status bar ───────────────────────────────────────────
+function setSyncStatus(state, text) {
+  var bar = document.getElementById("sync-bar");
+  var txt = document.getElementById("sync-text");
+  if (!bar) return;
+  bar.className     = state;
+  txt.textContent   = text;
+  bar.style.display = "inline-flex";
+}
+
+// ── No-op fbSave (all writes go through db.js) ───────────────
+function fbSave() {}
+
+// ── Check DB version, migrate if needed ───────────────────────
 function checkAndMigrate() {
   setSyncStatus("syncing", "Connessione\u2026");
 
-  // First check v2
   dbRef("groups").once("value", function(snap) {
     if (snap.exists()) {
-      // v2 data exists — subscribe
       startSubscription();
     } else {
-      // Check v1
+      // Check for v1 data to migrate
       firebase.database().ref("piano/v1").once("value", function(v1snap) {
-        if (v1snap.exists() && v1snap.val() && v1snap.val().groups) {
+        var v1 = v1snap.val();
+        if (v1 && v1.groups && v1.groups.length) {
           setSyncStatus("syncing", "Migrazione dati\u2026");
-          dbMigrateFromV1(v1snap.val()).then(function() {
-            setSyncStatus("synced", "Migrazione completata \u2713");
-            startSubscription();
-          });
+          dbMigrateFromV1(v1).then(startSubscription);
         } else {
-          // No data at all — first run
-          dbPushDefaultData().then(function() {
-            startSubscription();
-          });
+          // Truly first run — push default data
+          dbPushDefaultData().then(startSubscription);
         }
       });
     }
+  }, function(err) {
+    console.error("DB check error:", err);
+    setSyncStatus("error", "Errore connessione");
+    showLoading(false);
   });
 }
 
-// ── Subscribe to realtime data ────────────────────────────────
+// ── Realtime subscription ─────────────────────────────────────
+var _firstLoad = true;
 function startSubscription() {
   dbSubscribe(
     function(data) {
@@ -73,22 +84,21 @@ function startSubscription() {
       render();
       renderTrasferte();
       applyRoleVisibility();
-      setSyncStatus("synced", "Sincronizzato \u2713");
+      if (_firstLoad) {
+        _firstLoad = false;
+        showLoading(false);
+        if (typeof initUserPanel === "function") initUserPanel();
+      }
+      setSyncStatus("synced", "Sincronizzato ✓");
     },
     function(err) {
       setSyncStatus("error", "Errore connessione");
+      showLoading(false);
     }
   );
 }
 
-// ── Override saveData for v2: use granular writes ─────────────
-// app.js calls saveData() after every change.
-// We intercept each specific action via the action functions below
-// and call the appropriate db.js function instead.
-// saveData() itself becomes a no-op for Firebase (still writes localStorage).
-
-// ── Override cycleStatus to use per-field write ───────────────
-var _originalCycleStatus = typeof cycleStatus === "function" ? cycleStatus : null;
+// ── Override cycleStatus: per-field write + permission check ──
 function cycleStatus(gid, tid) {
   var task = findTask(gid, tid);
   if (!task) return;
@@ -98,19 +108,18 @@ function cycleStatus(gid, tid) {
     return;
   }
 
-  var next = { none:"partial", partial:"done", done:"none" }[task.status] || "none";
+  var CYCLE = { none:"partial", partial:"done", done:"none" };
+  var next  = CYCLE[task.status] || "none";
   task.status    = next;
   task.updatedBy = currentUser ? currentUser.uid : "";
   task.updatedAt = Date.now();
 
-  // Update just the status field in Firebase
+  // Atomic per-field writes
   dbSetTaskStatus(gid, tid, next);
-
-  // Also stamp updatedBy/updatedAt
   dbRef("groups/" + gid + "/tasks/" + tid + "/updatedBy").set(task.updatedBy);
   dbRef("groups/" + gid + "/tasks/" + tid + "/updatedAt").set(task.updatedAt);
 
-  // Local re-render
+  // Optimistic local re-render (subscription will confirm)
   var tr = document.querySelector('tr[data-task-id="' + tid + '"]');
   if (tr) {
     tr.classList.remove("row-done", "row-partial");
@@ -119,16 +128,21 @@ function cycleStatus(gid, tid) {
     var btn = tr.querySelector(".status-btn");
     if (btn) {
       btn.dataset.status = next;
-      btn.querySelector(".btn-label").textContent = { none:"–", partial:"In corso", done:"Completato" }[next];
+      btn.querySelector(".btn-label").textContent =
+        { none:"\u2013", partial:"In corso", done:"Completato" }[next];
     }
   }
   updatePills();
 }
 
-// ── Wire JSON import to use v2 migration ─────────────────────
-var _origImportInput = document.getElementById("import-file-input");
-if (_origImportInput) {
-  _origImportInput.addEventListener("change", function() {
+// ── JSON import → v2 structure ────────────────────────────────
+var importInput = document.getElementById("import-file-input");
+if (importInput) {
+  // Remove any existing listener added by app.js
+  var newInput = importInput.cloneNode(true);
+  importInput.parentNode.replaceChild(newInput, importInput);
+
+  newInput.addEventListener("change", function() {
     var file = this.files[0];
     if (!file) return;
     var reader = new FileReader();
@@ -139,11 +153,17 @@ if (_origImportInput) {
           alert("File JSON non valido.");
           return;
         }
-        if (!confirm("Questo sovrascriverà tutti i dati correnti. Continuare?")) return;
+        if (!confirm("Sovrascrivere tutti i dati correnti con questo file?")) return;
         setSyncStatus("syncing", "Importazione\u2026");
-        dbMigrateFromV1(parsed).then(function() {
+        // Clear existing v2 data first then migrate
+        dbRef("").remove().then(function() {
+          return dbMigrateFromV1(parsed);
+        }).then(function() {
           setSyncStatus("synced", "Importazione completata \u2713");
-          alert("\u2713 Configurazione importata con successo!");
+          alert("\u2713 Importazione completata!");
+        }).catch(function(err) {
+          setSyncStatus("error", "Errore importazione");
+          console.error(err);
         });
       } catch(err) {
         alert("Errore lettura JSON:\n" + err.message);

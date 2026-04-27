@@ -14,6 +14,31 @@
 </head>
 <body>
 
+<!-- LOADING OVERLAY — shown until Firebase auth + data resolves -->
+<div id="loading-overlay" style="position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <div style="font-family:'Inter',sans-serif;font-weight:800;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent)">Fusaro Impianti S.r.l.</div>
+  <div style="font-family:'Inter',sans-serif;font-weight:900;font-size:28px;letter-spacing:-.04em;color:var(--text)">Piano di Lavoro</div>
+  <div style="display:flex;gap:6px;margin-top:8px">
+    <div class="loading-dot" style="animation-delay:0s"></div>
+    <div class="loading-dot" style="animation-delay:.2s"></div>
+    <div class="loading-dot" style="animation-delay:.4s"></div>
+  </div>
+  <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.1em" id="loading-status">Autenticazione&hellip;</div>
+</div>
+
+<!-- USER MANAGEMENT PANEL (capo_cantiere only) -->
+<div id="user-panel" style="display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--modal-bg);border:1px solid var(--border);border-radius:12px;padding:28px;width:100%;max-width:520px;max-height:80vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:18px">Gestione Utenti</div>
+      <button class="icon-btn" id="btn-close-user-panel" style="width:28px;height:28px;font-size:16px">&#x2715;</button>
+    </div>
+    <div id="user-list">
+      <div style="color:var(--muted);font-size:13px">Caricamento utenti&hellip;</div>
+    </div>
+  </div>
+</div>
+
 <!-- MAIN APP -->
 <div class="container">
 
@@ -21,6 +46,12 @@
     <div>
       <h1><span>Piano di Lavoro</span>Attività &amp; Tempistiche</h1>
       <div class="header-actions">
+        <button class="export-btn" id="btn-user-panel" style="display:none">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12">
+            <circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/>
+          </svg>
+          Utenti
+        </button>
         <button class="toggle-done-btn" id="btn-toggle-done">
           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12">
             <path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/>

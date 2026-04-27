@@ -360,3 +360,66 @@ footer { margin-top:28px; font-family:'DM Mono',monospace; font-size:10px; color
 
 /* Auth screen (shared, used on index.html via login.css) */
 body.auth-open { overflow: hidden; pointer-events: none; }
+
+/* ═══════════════════════════════════════════════════
+   LOADING OVERLAY
+   ═══════════════════════════════════════════════════ */
+.loading-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: loadPulse 1.2s ease-in-out infinite;
+}
+@keyframes loadPulse {
+  0%, 100% { opacity: .2; transform: scale(.8); }
+  50%       { opacity: 1;  transform: scale(1.1); }
+}
+
+/* ═══════════════════════════════════════════════════
+   USER MANAGEMENT PANEL
+   ═══════════════════════════════════════════════════ */
+.user-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  background: rgba(255,255,255,.02);
+}
+.user-list-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.user-list-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+.user-list-email {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.user-role-select {
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .06em;
+  color: var(--text);
+  cursor: pointer;
+  outline: none;
+}
+.user-role-select:focus { border-color: var(--accent); }
+body.light .user-role-select { background: rgba(0,0,0,.04); color: var(--text); }

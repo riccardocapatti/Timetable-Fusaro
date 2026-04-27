@@ -77,10 +77,15 @@ function dbSetTaskStatus(groupId, taskId, status) {
 }
 
 // ── TASK ASSIGNMENT ───────────────────────────────────────────
-function dbSetTaskAssignment(groupId, taskId, assignedTo) {
-  // assignedTo: array of uids
+function dbSetTaskAssignment(groupId, taskId, assignedUids) {
+  // Store as {uid: true} object — Firebase-native set, safe for rules checks
+  var obj = null;
+  if (assignedUids && assignedUids.length > 0) {
+    obj = {};
+    assignedUids.forEach(function(uid) { obj[uid] = true; });
+  }
   return dbRef("groups/" + groupId + "/tasks/" + taskId + "/assignedTo")
-    .set(assignedTo)
+    .set(obj)   // null removes the node cleanly
     .catch(function(e){ console.error(e); });
 }
 
@@ -120,7 +125,7 @@ function normalizeDbData(raw) {
         status:     t.status     || "none",
         priority:   t.priority   || "",
         dueDate:    t.dueDate    || "",
-        assignedTo: t.assignedTo || [],
+        assignedTo: t.assignedTo ? Object.keys(t.assignedTo) : [],
         updatedBy:  t.updatedBy  || "",
         updatedAt:  t.updatedAt  || 0
       };
@@ -164,7 +169,7 @@ function dbPushDefaultData() {
     };
     g.tasks.forEach(function(t, tidx) {
       t.order      = tidx;
-      t.assignedTo = [];
+      t.assignedTo = null;   // null = unassigned (Firebase drops empty arrays)
       t.updatedBy  = "";
       t.updatedAt  = 0;
       updates["groups/" + gid + "/tasks/" + t.id] = t;
@@ -198,7 +203,7 @@ function dbMigrateFromV1(v1Data) {
         priority:   t.priority   || "",
         dueDate:    t.dueDate    || "",
         order:      tidx,
-        assignedTo: [],
+        assignedTo: null,
         updatedBy:  "",
         updatedAt:  0
       };
