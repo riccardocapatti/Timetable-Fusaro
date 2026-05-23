@@ -12,12 +12,41 @@ var ROLES = {
 };
 
 // ── Load current user's profile from DB ──────────────────────
+// If no record exists yet, create one (first login on this device)
 function loadCurrentUser(firebaseUser) {
   currentUser = firebaseUser;
-  return firebase.database().ref("users/" + firebaseUser.uid)
-    .once("value")
+  var ref = firebase.database().ref("users/" + firebaseUser.uid);
+
+  return ref.once("value")
     .then(function(snap) {
-      currentUserData = snap.val() || {
+      if (snap.exists()) {
+        // Record exists — use it
+        currentUserData = snap.val();
+        console.log("[USERS] Loaded existing user:", currentUserData.email, "role:", currentUserData.role);
+      } else {
+        // No record — create it now (first login)
+        currentUserData = {
+          uid:       firebaseUser.uid,
+          email:     firebaseUser.email,
+          name:      firebaseUser.email.split("@")[0],
+          role:      "operaio",
+          createdAt: Date.now()
+        };
+        console.log("[USERS] Creating new user record:", currentUserData.email);
+        // Write to Firebase — will succeed now that rules allow auth.uid === $uid writes
+        return ref.set(currentUserData).then(function() {
+          console.log("[USERS] User record created OK");
+        });
+      }
+    })
+    .then(function() {
+      renderUserBadge(currentUserData);
+      return currentUserData;
+    })
+    .catch(function(err) {
+      // Rules blocked the read — use a local fallback so app still loads
+      console.warn("[USERS] Could not read user record (rules?):", err.message);
+      currentUserData = {
         uid:   firebaseUser.uid,
         email: firebaseUser.email,
         name:  firebaseUser.email.split("@")[0],
@@ -34,6 +63,11 @@ function loadAllUsers() {
     .once("value")
     .then(function(snap) {
       allUsers = snap.val() || {};
+      console.log("[USERS] Loaded", Object.keys(allUsers).length, "users");
+    })
+    .catch(function(err) {
+      console.warn("[USERS] Could not load all users:", err.message);
+      allUsers = {};
     });
 }
 
