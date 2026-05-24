@@ -175,31 +175,8 @@ function normalizeDbData(raw) {
   return { groups: groups, trasferte: trasferte };
 }
 
-// ── First-run: push default data to Firebase ──────────────────
-function dbPushDefaultData() {
-  var data    = makeDefaultData();
-  var updates = {};
+// App starts empty — data comes from JSON import or Firebase
 
-  data.groups.forEach(function(g, idx) {
-    var gid  = g.id;
-    updates["groups/" + gid + "/meta"] = {
-      id: gid, label: g.label, colorIdx: g.colorIdx, collapsed: false, order: idx
-    };
-    g.tasks.forEach(function(t, tidx) {
-      t.order      = tidx;
-      t.assignedTo = null;   // null = unassigned (Firebase drops empty arrays)
-      t.updatedBy  = "";
-      t.updatedAt  = 0;
-      updates["groups/" + gid + "/tasks/" + t.id] = t;
-    });
-  });
-
-  data.trasferte.forEach(function(t) {
-    updates["trasferte/" + t.id] = t;
-  });
-
-  return dbRef("").update(updates);
-}
 
 // ── Migrate from v1 flat structure to v2 per-node structure ───
 function dbMigrateFromV1(v1Data) {
