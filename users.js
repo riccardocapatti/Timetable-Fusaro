@@ -291,7 +291,7 @@ function rebuildUserListHtml(list) {
   // ── Add user form ──────────────────────────────────────────
   var addForm =
     '<div class="add-user-form">' +
-      '<div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Aggiungi utente</div>' +
+      '<div style="font-family:DM Mono,monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Aggiungi utente</div>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
         '<input class="field-input" id="new-user-name"  placeholder="Nome" style="flex:1;min-width:100px;font-size:13px;padding:8px 10px" />' +
         '<input class="field-input" id="new-user-email" placeholder="email@fusaroimpianti.it" type="email" style="flex:2;min-width:160px;font-size:13px;padding:8px 10px" />' +
