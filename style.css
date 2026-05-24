@@ -18,11 +18,17 @@
 
 /* ── LIGHT THEME ── */
 body.light {
-  --bg:#f4f6fa; --surface:#ffffff; --border:#dde1ea;
-  --accent:#2563eb; --accent2:#d97706; --text:#1a1d27;
-  --muted:#6b7280; --tag:#eef2ff; --danger:#dc2626;
-  --grid-line:rgba(37,99,235,.025);
-  --modal-bg:#ffffff;
+  --bg:#e8ecf2;         /* warm grey, not blinding white */
+  --surface:#f0f3f8;    /* slightly off-white surfaces */
+  --border:#c8d0de;     /* more visible borders */
+  --accent:#2563eb;
+  --accent2:#b45309;    /* darker amber — readable on light bg */
+  --text:#1e2330;
+  --muted:#5a6478;
+  --tag:#dde4f0;
+  --danger:#c0392b;
+  --grid-line:rgba(37,99,235,.04);
+  --modal-bg:#f0f3f8;
 }
 body.light::before {
   background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),
@@ -32,7 +38,10 @@ body.light .status-btn                          { background:rgba(0,0,0,.04); }
 body.light .icon-btn:hover                      { background:rgba(0,0,0,.07); }
 body.light .field-input                         { background:rgba(0,0,0,.04); color:var(--text); }
 body.light .btn-cancel                          { background:rgba(0,0,0,.05); color:var(--muted); }
-body.light .modal                               { background:var(--modal-bg); }
+body.light .modal { background:var(--modal-bg); }
+body.light .pill  { background:#e2e8f2; border-color:#c0cade; }
+body.light .table-wrap { border-color:#c0cade; }
+body.light .notes { background:#e2e8f2; border-color:#c0cade; }
 body.light .bar-bg                              { background:#e2e5ec; }
 body.light .task-row:hover                      { background:rgba(37,99,235,.04); }
 body.light .add-task-btn:hover                  { background:rgba(37,99,235,.07); }
@@ -51,12 +60,12 @@ body.light .prio-opt:checked[value="media"] + label { background:rgba(217,119,6,
 body.light .prio-opt:checked[value="bassa"] + label { background:rgba(107,114,128,.12); color:#374151; border-color:rgba(107,114,128,.35); }
 body.light .prio-opt + label:hover              { background:rgba(0,0,0,.06); }
 body.light .toggle-done-btn.active              { background:rgba(37,99,235,.1); color:#1d4ed8; border-color:rgba(37,99,235,.3); }
-body.light .side-menu { background:#ffffff; }
+body.light .side-menu { background:#e8ecf2; border-color:#b8c4d4; }
 body.light .menu-item:hover                     { background:rgba(0,0,0,.05); }
 body.light .theme-opt                           { background:rgba(0,0,0,.04); border-color:var(--border); }
 body.light .theme-opt.active                    { background:rgba(37,99,235,.12); color:#1d4ed8; border-color:rgba(37,99,235,.4); }
 body.light .user-role-select                    { background:rgba(0,0,0,.04); color:var(--text); }
-body.light .topbar                              { background:rgba(244,246,250,.92); border-color:#dde1ea; }
+body.light .topbar { background:var(--bg); border-color:#b8c4d4; }
 
 /* ── MOBILE THEME ── */
 body.mobile {
@@ -80,12 +89,12 @@ body.mobile .hint         { display:none; }
 /* Mobile: card list shown instead */
 body.mobile .card-list    { display:block; }
 
-/* Mobile: larger touch targets everywhere */
+/* Mobile: touch-friendly but not oversized */
 body.mobile .status-btn {
-  padding:10px 16px;
-  font-size:11px;
-  border-radius:8px;
-  min-height:var(--touch-target);
+  padding:8px 14px;
+  font-size:10px;
+  border-radius:7px;
+  min-height:40px;   /* 40px is touch-safe without being huge */
   width:100%;
   justify-content:center;
 }
@@ -116,13 +125,13 @@ body.mobile .pill-value { font-size:20px; }
    ════════════════════════════════════════════ */
 .card-list { display:none; } /* hidden on desktop */
 
-.card-group { margin-bottom:20px; }
+.card-group { margin-bottom:14px; }
 
 .card-group-header {
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:10px 14px;
+  padding:8px 12px;
   border-radius:var(--card-radius,10px) var(--card-radius,10px) 0 0;
   cursor:pointer;
   user-select:none;
@@ -143,9 +152,9 @@ body.mobile .pill-value { font-size:20px; }
 }
 .card-group-subtotal {
   font-family:'DM Mono',monospace;
-  font-size:10px;
+  font-size:9px;
   color:var(--muted);
-  padding:4px 14px 8px;
+  padding:2px 12px 6px;
   display:flex;
   justify-content:space-between;
 }
@@ -154,10 +163,11 @@ body.mobile .pill-value { font-size:20px; }
   background:var(--surface);
   border:1px solid var(--border);
   border-top:none;
-  padding:14px 14px 12px;
+  /* Compact padding */
+  padding:10px 12px 10px;
   display:flex;
   flex-direction:column;
-  gap:10px;
+  gap:7px;
   animation:rowIn .2s ease both;
 }
 .card-task:last-of-type { border-radius:0 0 var(--card-radius,10px) var(--card-radius,10px); }
@@ -169,26 +179,26 @@ body.mobile .pill-value { font-size:20px; }
   display:flex;
   align-items:flex-start;
   justify-content:space-between;
-  gap:10px;
+  gap:8px;
 }
 .card-task-name {
-  font-size:14px;
+  font-size:13px;   /* smaller than before */
   font-weight:400;
   color:var(--text);
-  line-height:1.35;
+  line-height:1.3;
   flex:1;
 }
 .card-task-badges {
   display:flex;
   flex-wrap:wrap;
-  gap:5px;
+  gap:4px;
   align-items:center;
 }
 .card-task-meta {
   display:flex;
-  gap:16px;
+  gap:12px;
   font-family:'DM Mono',monospace;
-  font-size:11px;
+  font-size:10px;   /* smaller */
   color:var(--muted);
 }
 .card-task-meta span b { color:var(--text); font-weight:500; }
@@ -201,13 +211,13 @@ body.mobile .pill-value { font-size:20px; }
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:6px;
-  height:40px;
+  gap:5px;
+  height:34px;   /* was 40px */
   background:rgba(255,255,255,.04);
   border:1px solid var(--border);
-  border-radius:8px;
+  border-radius:7px;
   font-family:'DM Mono',monospace;
-  font-size:10px;
+  font-size:9px;
   letter-spacing:.08em;
   text-transform:uppercase;
   color:var(--muted);
@@ -303,16 +313,17 @@ body::before {
   position:fixed;
   top:0; left:0; right:0;
   height:var(--topbar-h);
-  z-index:91; /* above container z-index:1, below modals */
-  background:rgba(13,15,20,.96); /* more opaque so content behind is fully hidden */
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
+  z-index:91;
+  /* Fully opaque — nothing bleeds through */
+  background:var(--bg);
   border-bottom:1px solid var(--border);
   display:flex;
   align-items:center;
   justify-content:space-between;
   padding:0 20px;
   gap:12px;
+  /* Clip anything that might overflow into topbar */
+  overflow:hidden;
 }
 .topbar-left {
   display:flex;
@@ -387,25 +398,20 @@ body.menu-open .menu-overlay { opacity:1; pointer-events:all; }
 .side-menu {
   position:fixed;
   top:0; bottom:0;
-  /* Anchor to right edge, width explicit */
-  right:0;
-  width:280px;
+  /* Hidden: use right offset — more reliable than transform on mobile */
+  right:-320px;
+  width:300px;
   max-width:85vw;
-  z-index:9998; /* just below loading overlay */
+  z-index:9998;
   background:#13161d;
   border-left:1px solid var(--border);
   display:flex;
   flex-direction:column;
   overflow-y:auto;
-  /* Hidden: shifted fully off-screen to the right */
-  transform:translateX(110%);
-  transition:transform .28s cubic-bezier(.4,0,.2,1);
-  will-change:transform;
-  /* Ensure it's always rendered, just off-screen */
-  visibility:visible;
+  transition:right .28s cubic-bezier(.4,0,.2,1);
 }
 body.menu-open .side-menu {
-  transform:translateX(0);
+  right:0;
 }
 
 .side-menu-header {
