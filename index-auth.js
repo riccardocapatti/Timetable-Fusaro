@@ -35,21 +35,46 @@ firebase.auth().onAuthStateChanged(function(user) {
 });
 
 // ── Register user in /users/{uid} on first sign in ────────
+// Checks if a pre-registered record exists (added by capo_cantiere before first login)
+// If found, migrates it to the real UID and preserves the role/name set by capo.
 function registerUser(user) {
-  var ref = firebase.database().ref("users/" + user.uid);
-  return ref.once("value").then(function(snap) {
-    if (!snap.exists()) {
-      // First time — create record with default role
-      return ref.set({
-        uid:       user.uid,
-        email:     user.email,
-        name:      user.displayName || user.email.split("@")[0],
-        role:      "operaio",   // default — capo_cantiere must be set manually in Firebase console
-        createdAt: Date.now()
-      });
+  var realRef        = firebase.database().ref("users/" + user.uid);
+  var email          = user.email.toLowerCase();
+  var placeholderKey = "pre_" + email.replace(/[.@]/g, "_");
+  var preRef         = firebase.database().ref("users/" + placeholderKey);
+
+  return realRef.once("value").then(function(snap) {
+    if (snap.exists()) {
+      // Already registered with real UID — just update last login
+      return realRef.update({ lastLogin: Date.now() });
     }
-    // Existing user — just update last login
-    return ref.update({ lastLogin: Date.now() });
+
+    // No real UID record — check for a pre-registered placeholder
+    return preRef.once("value").then(function(preSnap) {
+      if (preSnap.exists()) {
+        var preData = preSnap.val();
+        // Migrate: write to real UID, delete placeholder
+        return realRef.set({
+          uid:          user.uid,
+          email:        email,
+          name:         preData.name || user.email.split("@")[0],
+          role:         preData.role || "operaio",
+          createdAt:    Date.now(),
+          migratedFrom: placeholderKey
+        }).then(function() {
+          return preRef.remove();
+        });
+      } else {
+        // Truly new user — create with default role
+        return realRef.set({
+          uid:       user.uid,
+          email:     email,
+          name:      user.displayName || user.email.split("@")[0],
+          role:      "operaio",
+          createdAt: Date.now()
+        });
+      }
+    });
   });
 }
 
