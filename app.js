@@ -19,63 +19,15 @@ const CYCLE   = { none:'partial', partial:'done', done:'none' };
 const PRIO_LABEL = { alta:'Alta', media:'Media', bassa:'Bassa', '':'—' };
 
 // ─────────────────────────────────────────────
-// TASK FACTORY
+// HELPERS
 // ─────────────────────────────────────────────
 function uid() { return 'id-' + Math.random().toString(36).slice(2,9); }
 
-function makeCabinTasks(prefix) {
-  return [
-    { name:`Plastiche ${prefix}`,                  days:'—',   people:1 },
-    { name:`Infilaggio ${prefix}`,                 days:'0.5', people:2 },
-    { name:`Installazioni ${prefix}`,              days:'1.5', people:2 },
-    { name:`Quadro ${prefix} ★`,                  days:'3',   people:1 },
-    { name:`Allacciamento Vano Tecnico ${prefix}`, days:'1',   people:1 },
-    { name:`Allacciamento Quadro ${prefix} ★`,    days:'3',   people:1 },
-    { name:`Programmazione ${prefix} ★`,          days:'1',   people:1 },
-    { name:`Collaudo ${prefix}`,                   days:'0.5', people:1 },
-  ].map(t => ({ id:uid(), name:t.name, days:t.days, people:t.people, status:'none', priority:'', dueDate:'' }));
-}
-
 // ─────────────────────────────────────────────
-// DEFAULT DATA
+// DEFAULT DATA — empty, Firebase is source of truth
 // ─────────────────────────────────────────────
 function makeDefaultData() {
-  return {
-    trasferte: [
-      { id:'tr-1', giorni:'1', luogo:'Cartura Fibre' },
-      { id:'tr-2', giorni:'1', luogo:'Cartura TVCC'  },
-      { id:'tr-3', giorni:'1', luogo:'Baucino'       },
-      { id:'tr-4', giorni:'1', luogo:'Bologna'       },
-    ],
-    groups: [
-      {
-        id:'g-t5', label:'Gruppo T5', colorIdx:0, collapsed:false,
-        tasks:[
-          { id:'t5-getti',       name:'Preparazione Getti + Installazione', days:'0.5', people:1, status:'done',    priority:'',      dueDate:'' },
-          { id:'t5-vano',        name:'Allacciamenti Vano Tecnico T5',       days:'0.5', people:1, status:'none',    priority:'',      dueDate:'' },
-          { id:'t5-quadro',      name:'Allacciamento Quadro T5C ★',          days:'1',   people:1, status:'done',    priority:'',      dueDate:'' },
-          { id:'t5-prog',        name:'Programmazione T5 ★',                 days:'1',   people:1, status:'done',    priority:'',      dueDate:'' },
-          { id:'t5-collaudo',    name:'Collaudo T5',                         days:'0.5', people:1, status:'partial', priority:'alta',  dueDate:'' },
-          { id:'t5-gettoniera',  name:'Installazione Gettoniera – ultima T5', days:'—',  people:1, status:'none',    priority:'alta',  dueDate:'' },
-          { id:'t5-ionizzatore', name:'Installazione Ionizzatore – ultima T5',days:'—',  people:1, status:'none',    priority:'media', dueDate:'' },
-        ]
-      },
-      { id:'g-t1',  label:'Gruppo T1',  colorIdx:1, collapsed:false, tasks:[
-        { id:uid(), name:'Plastiche T1',                         days:'—',   people:1, status:'done', priority:'',     dueDate:'' },
-        { id:uid(), name:'Infilaggio T1',                        days:'0.5', people:2, status:'none', priority:'',     dueDate:'' },
-        { id:uid(), name:'Installazioni T1',                     days:'1.5', people:2, status:'none', priority:'',     dueDate:'' },
-        { id:uid(), name:'Quadro T1 ★',                         days:'3',   people:1, status:'none', priority:'alta', dueDate:'' },
-        { id:uid(), name:'Allacciamento Vano Tecnico T1',         days:'1',   people:1, status:'none', priority:'',     dueDate:'' },
-        { id:uid(), name:'Allacciamento Quadro T1 ★',            days:'3',   people:1, status:'none', priority:'',     dueDate:'' },
-        { id:uid(), name:'Programmazione T1 ★',                  days:'1',   people:1, status:'none', priority:'',     dueDate:'' },
-        { id:uid(), name:'Collaudo T1',                           days:'0.5', people:1, status:'none', priority:'',     dueDate:'' },
-      ]},
-      { id:'g-t2',  label:'Gruppo T2',  colorIdx:2, collapsed:false, tasks: makeCabinTasks('T2')  },
-      { id:'g-t3',  label:'Gruppo T3',  colorIdx:3, collapsed:false, tasks: makeCabinTasks('T3')  },
-      { id:'g-t4a', label:'Gruppo T4A', colorIdx:4, collapsed:false, tasks: makeCabinTasks('T4A') },
-      { id:'g-t4b', label:'Gruppo T4B', colorIdx:5, collapsed:false, tasks: makeCabinTasks('T4B') },
-    ]
-  };
+  return { groups: [], trasferte: [] };
 }
 
 // ─────────────────────────────────────────────
@@ -156,23 +108,37 @@ function render() {
     renderSubtotalRow(tbody, group, c);
   });
   updatePills();
+  renderCardList();
 }
 
 function renderGroupHeader(tbody, group, c) {
   const tr = document.createElement('tr');
   tr.className = 'group-header-row' + (group.collapsed ? ' group-collapsed' : '');
   tr.dataset.groupId = group.id;
+  var assignedUids  = getGroupAssignedUids(group);
+  var assignedNames = assignedUids.map(function(uid) {
+    var u = (typeof allUsers !== 'undefined' && allUsers[uid]);
+    return u ? u.name.split(' ')[0] : '';
+  }).filter(Boolean);
+  var groupAssignBadge = assignedNames.length
+    ? '<span class="assigned-badge" style="margin-left:8px">' +
+        '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="10" height="10">' +
+        '<circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>' +
+        assignedNames.join(', ') + '</span>'
+    : '';
+
   tr.innerHTML = `
     <td colspan="6">
       <div class="group-header-inner" style="background:${c.bg}">
         <span class="group-label" style="color:${c.color}" data-action="toggle-group" data-group="${group.id}">
-          <span class="collapse-icon">▸</span> ${escHtml(group.label)}
+          <span class="collapse-icon">▸</span> ${escHtml(group.label)}${groupAssignBadge}
         </span>
         <div class="group-actions">
-          <button class="icon-btn pdf"    title="Esporta gruppo PDF" data-action="export-group" data-group="${group.id}">↓</button>
-          <button class="icon-btn"        title="Rinomina / colore"  data-action="rename-group" data-group="${group.id}">✎</button>
-          <button class="icon-btn clone"  title="Clona gruppo"       data-action="clone-group"  data-group="${group.id}">⧉</button>
-          <button class="icon-btn danger" title="Elimina gruppo"     data-action="delete-group" data-group="${group.id}">✕</button>
+          <button class="icon-btn pdf"    title="Esporta gruppo PDF"   data-action="export-group"  data-group="${group.id}">↓</button>
+          <button class="icon-btn clone"  title="Assegna gruppo"       data-action="assign-group"  data-group="${group.id}">👤</button>
+          <button class="icon-btn"        title="Rinomina / colore"    data-action="rename-group"  data-group="${group.id}">✎</button>
+          <button class="icon-btn clone"  title="Clona gruppo"         data-action="clone-group"   data-group="${group.id}">⧉</button>
+          <button class="icon-btn danger" title="Elimina gruppo"       data-action="delete-group"  data-group="${group.id}">✕</button>
         </div>
       </div>
     </td>`;
@@ -539,41 +505,226 @@ document.getElementById('table-body').addEventListener('click', e => {
   if (action === 'delete-group') { deleteGroup(gid); return; }
   if (action === 'toggle-group') { toggleGroup(gid); return; }
   if (action === 'export-group') { exportPdf(gid); return; }
+  if (action === 'assign-group') { assignGroup(gid); return; }
 });
 
 document.getElementById('btn-add-group').addEventListener('click', addGroup);
 document.getElementById('btn-export-all').addEventListener('click', () => exportPdf(null));
 
 // ─────────────────────────────────────────────
-// HIDE COMPLETED TOGGLE
+// HAMBURGER MENU
 // ─────────────────────────────────────────────
-let hideDone = false;
-const toggleDoneBtn = document.getElementById('btn-toggle-done');
-function updateToggleDoneLabel() {
-  toggleDoneBtn.classList.toggle('active', hideDone);
-  const textNode = [...toggleDoneBtn.childNodes].find(n => n.nodeType === 3);
-  if (textNode) textNode.textContent = hideDone ? ' Mostra completate' : ' Nascondi completate';
-}
-toggleDoneBtn.addEventListener('click', () => {
-  hideDone = !hideDone;
-  document.body.classList.toggle('hide-done', hideDone);
-  updateToggleDoneLabel();
+function openMenu()  { document.body.classList.add('menu-open'); }
+function closeMenu() { document.body.classList.remove('menu-open'); }
+
+var hamburgerBtn = document.getElementById('btn-hamburger');
+var closeMenuBtn = document.getElementById('btn-close-menu');
+var menuOverlay  = document.getElementById('menu-overlay');
+
+hamburgerBtn && hamburgerBtn.addEventListener('click', openMenu);
+closeMenuBtn && closeMenuBtn.addEventListener('click', closeMenu);
+menuOverlay  && menuOverlay.addEventListener('click', closeMenu);
+
+// Close menu on Escape
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeMenu();
 });
 
 // ─────────────────────────────────────────────
-// THEME TOGGLE
+// CARD LIST RENDERER (mobile theme)
 // ─────────────────────────────────────────────
-let isLight = localStorage.getItem('fusaro_theme') === 'light';
-const themeBtn = document.getElementById('btn-theme');
-function applyTheme() {
-  document.body.classList.toggle('light', isLight);
-  themeBtn.classList.toggle('theme-active', isLight);
-  const textNode = [...themeBtn.childNodes].find(n => n.nodeType === 3);
-  if (textNode) textNode.textContent = isLight ? ' Tema scuro' : ' Tema chiaro';
-  localStorage.setItem('fusaro_theme', isLight ? 'light' : 'dark');
+function renderCardList() {
+  var container = document.getElementById('card-list-container');
+  if (!container) return;
+
+  var isMobile = document.body.classList.contains('mobile');
+  container.style.display = isMobile ? 'block' : 'none';
+  if (!isMobile) return;
+
+  container.innerHTML = '';
+
+  appData.groups.forEach(function(group) {
+    var c = GROUP_COLORS[group.colorIdx % GROUP_COLORS.length];
+
+    // Group wrapper
+    var groupEl = document.createElement('div');
+    groupEl.className = 'card-group';
+
+    // Group header
+    var { total, remaining } = groupTotals(group);
+    var headerEl = document.createElement('div');
+    headerEl.className = 'card-group-header';
+    headerEl.style.background = c.bg;
+    headerEl.innerHTML =
+      '<span class="card-group-label" style="color:' + c.color + '">' +
+        '<span class="collapse-icon"' + (group.collapsed ? ' style="transform:rotate(-90deg)"' : '') + '>▸</span>' +
+        escHtml(group.label) +
+      '</span>' +
+      (typeof isCapoCantiere === 'function' && isCapoCantiere() ?
+        '<div class="card-group-actions" style="display:flex;gap:6px">' +
+          '<button class="icon-btn" data-action="assign-group" data-group="' + group.id + '" title="Assegna gruppo">👤</button>' +
+          '<button class="icon-btn" data-action="rename-group" data-group="' + group.id + '" title="Rinomina">✎</button>' +
+          '<button class="icon-btn danger" data-action="delete-group" data-group="' + group.id + '" title="Elimina">✕</button>' +
+        '</div>' : '');
+    headerEl.querySelector('.card-group-label').addEventListener('click', function() {
+      toggleGroup(group.id);
+    });
+    headerEl.querySelectorAll('[data-action]').forEach(function(btn) {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        var action = this.dataset.action;
+        var gid    = this.dataset.group;
+        if (action === 'rename-group') renameGroup(gid);
+        if (action === 'delete-group') deleteGroup(gid);
+        if (action === 'assign-group') assignGroup(gid);
+      });
+    });
+    groupEl.appendChild(headerEl);
+
+    // Subtotal bar
+    var subtotalEl = document.createElement('div');
+    subtotalEl.className = 'card-group-subtotal';
+    subtotalEl.style.background = c.bg + '88';
+    subtotalEl.innerHTML =
+      '<span style="color:var(--danger);font-size:10px">rimanenti ' + fmtNum(remaining) + ' G·U</span>' +
+      '<span style="color:' + c.color + '">totale ' + fmtNum(total) + '</span>';
+    groupEl.appendChild(subtotalEl);
+
+    if (!group.collapsed) {
+      // Task cards
+      group.tasks.forEach(function(task) {
+        if (hideDone && task.status === 'done') return;
+
+        var visible = typeof canSeeTask !== 'function' || canSeeTask(task);
+        if (!visible) return;
+
+        var gu   = computeGU(task.days, task.people);
+        var card = document.createElement('div');
+        card.className = 'card-task' +
+          (task.status === 'done'    ? ' row-done'    : '') +
+          (task.status === 'partial' ? ' row-partial' : '');
+        card.dataset.taskId  = task.id;
+        card.dataset.groupId = group.id;
+
+        var canEdit = typeof canEditTask !== 'function' || canEditTask(task);
+
+        card.innerHTML =
+          '<div class="card-task-top">' +
+            '<span class="card-task-name" style="border-left:3px solid ' + c.color + ';padding-left:10px">' +
+              escHtml(task.name) +
+            '</span>' +
+          '</div>' +
+          '<div class="card-task-badges">' +
+            prioBadgeHtml(task.priority) +
+            dueBadgeHtml(task.dueDate) +
+            (typeof assignmentBadgeHtml === 'function' ? assignmentBadgeHtml(task) : '') +
+          '</div>' +
+          '<div class="card-task-meta">' +
+            '<span><b>' + (isNaN(parseNum(task.days)) ? '—' : fmtNum(parseNum(task.days))) + '</b> giorni</span>' +
+            '<span><b>×' + task.people + '</b> pers.</span>' +
+            '<span><b>' + fmtNum(gu) + '</b> G·U</span>' +
+          '</div>' +
+          '<button class="status-btn" data-status="' + task.status + '" data-task="' + task.id + '" data-group="' + group.id + '" style="' + (!canEdit ? 'pointer-events:none;opacity:.5' : '') + '">' +
+            '<span class="btn-dot"></span>' +
+            '<span class="btn-label">' + (LABELS[task.status] || '–') + '</span>' +
+          '</button>' +
+          (canEdit ?
+            '<div class="card-task-actions">' +
+              '<button class="card-edit-btn" data-action="edit-task" data-task="' + task.id + '" data-group="' + group.id + '">✎ Modifica</button>' +
+              '<button class="card-edit-btn danger" data-action="delete-task" data-task="' + task.id + '" data-group="' + group.id + '">✕</button>' +
+            '</div>' : '');
+
+        // Wire status button
+        card.querySelector('.status-btn').addEventListener('click', function() {
+          if (typeof cycleStatus === 'function') cycleStatus(group.id, task.id);
+        });
+
+        // Wire action buttons
+        card.querySelectorAll('[data-action]').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var action = this.dataset.action;
+            var tid    = this.dataset.task;
+            var gid    = this.dataset.group;
+            if (action === 'edit-task')   editTask(gid, tid);
+            if (action === 'delete-task') deleteTask(gid, tid);
+          });
+        });
+
+        groupEl.appendChild(card);
+      });
+
+      // Add task button (capo only)
+      if (typeof isCapoCantiere !== 'function' || isCapoCantiere()) {
+        var addBtn = document.createElement('button');
+        addBtn.className = 'card-add-task-btn';
+        addBtn.style.borderColor = c.color + '44';
+        addBtn.style.color = c.color + 'aa';
+        addBtn.textContent = '+ Aggiungi attività';
+        addBtn.addEventListener('click', function() { addTask(group.id); });
+        groupEl.appendChild(addBtn);
+      }
+    }
+
+    container.appendChild(groupEl);
+  });
+
+  // Add group button (capo only)
+  if (typeof isCapoCantiere !== 'function' || isCapoCantiere()) {
+    var addGroupBtn = document.createElement('button');
+    addGroupBtn.className = 'card-add-group-btn';
+    addGroupBtn.textContent = '+ Aggiungi Gruppo';
+    addGroupBtn.addEventListener('click', addGroup);
+    container.appendChild(addGroupBtn);
+  }
 }
-applyTheme();
-themeBtn.addEventListener('click', () => { isLight = !isLight; applyTheme(); });
+
+// ─────────────────────────────────────────────
+// HIDE COMPLETED TOGGLE
+// ─────────────────────────────────────────────
+var hideDone = false;
+var toggleDoneBtn = document.getElementById('btn-toggle-done');
+
+function updateToggleDone() {
+  document.body.classList.toggle('hide-done', hideDone);
+  if (toggleDoneBtn) toggleDoneBtn.classList.toggle('active', hideDone);
+  var lbl = document.getElementById('toggle-done-label');
+  if (lbl) lbl.textContent = hideDone ? 'Mostra completate' : 'Nascondi completate';
+  renderCardList(); // update card view too
+}
+
+toggleDoneBtn && toggleDoneBtn.addEventListener('click', function() {
+  hideDone = !hideDone;
+  updateToggleDone();
+});
+
+// ─────────────────────────────────────────────
+// THEME
+// ─────────────────────────────────────────────
+var THEMES = ['dark','light','mobile'];
+var currentTheme = localStorage.getItem('fusaro_theme') || 'dark';
+
+function applyTheme(theme) {
+  currentTheme = theme;
+  document.body.classList.remove('light','mobile');
+  if (theme === 'light')  document.body.classList.add('light');
+  if (theme === 'mobile') document.body.classList.add('mobile');
+  localStorage.setItem('fusaro_theme', theme);
+  // Update active state on theme buttons
+  document.querySelectorAll('.theme-opt').forEach(function(btn) {
+    btn.classList.toggle('active', btn.dataset.theme === theme);
+  });
+  // Re-render card list (mobile) or table (desktop)
+  renderCardList();
+}
+
+document.querySelectorAll('.theme-opt').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    applyTheme(this.dataset.theme);
+    closeMenu();
+  });
+});
+
+applyTheme(currentTheme);
 
 // ─────────────────────────────────────────────
 // JSON EXPORT / IMPORT
@@ -632,6 +783,80 @@ importFileInput.addEventListener('change', () => {
   };
   reader.readAsText(file);
 });
+
+// ─────────────────────────────────────────────
+// GROUP ASSIGNMENT
+// ─────────────────────────────────────────────
+
+// Get the union of all assignedTo UIDs across a group's tasks
+function getGroupAssignedUids(group) {
+  var uidSet = {};
+  (group.tasks || []).forEach(function(t) {
+    (Array.isArray(t.assignedTo) ? t.assignedTo : []).forEach(function(uid) {
+      uidSet[uid] = true;
+    });
+  });
+  return Object.keys(uidSet);
+}
+
+async function assignGroup(gid) {
+  const group = findGroup(gid);
+  if (!group) return;
+
+  // Build user picker (same as task picker but for entire group)
+  const users = (typeof allUsers !== 'undefined') ? allUsers : {};
+  const uids  = Object.keys(users);
+
+  if (uids.length === 0) {
+    alert('Nessun utente disponibile. Aggiungi utenti dal pannello Utenti.');
+    return;
+  }
+
+  const currentAssigned = getGroupAssignedUids(group);
+
+  const options = uids.map(function(uid) {
+    const u       = users[uid];
+    const checked = currentAssigned.indexOf(uid) !== -1 ? 'checked' : '';
+    return '<label class="assign-option">' +
+      '<input type="checkbox" class="assign-checkbox" value="' + uid + '" ' + checked + '>' +
+      '<span class="assign-name">' + escHtml(u.name || u.email) + '</span>' +
+      '<span class="assign-role role-' + (u.role||'operaio') + '">' +
+        (u.role === 'capo_cantiere' ? 'Capo' : 'Operaio') +
+      '</span>' +
+    '</label>';
+  }).join('');
+
+  const result = await openModal(
+    'Assegna gruppo: ' + group.label,
+    '<div class="field-group">' +
+      '<label class="field-label">Assegna tutti i task a</label>' +
+      '<div class="assign-list">' + options + '</div>' +
+      '<p style="color:var(--muted);font-size:11px;margin-top:10px">' +
+        'Sovrascrive le assegnazioni di tutti i task del gruppo.' +
+      '</p>' +
+    '</div>',
+    'Assegna'
+  );
+
+  if (!result) return;
+
+  // Collect checked UIDs from modal
+  const checked = document.querySelectorAll('#modal-body .assign-checkbox:checked');
+  const newUids = [];
+  checked.forEach(function(cb) { newUids.push(cb.value); });
+
+  // Apply to every task in the group
+  const promises = group.tasks.map(function(task) {
+    task.assignedTo = newUids;
+    if (typeof dbSetTaskAssignment === 'function') {
+      return dbSetTaskAssignment(gid, task.id, newUids);
+    }
+    return Promise.resolve();
+  });
+
+  await Promise.all(promises);
+  render();
+}
 
 // ─────────────────────────────────────────────
 // TRASFERTE
