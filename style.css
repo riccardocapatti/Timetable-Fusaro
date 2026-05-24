@@ -271,6 +271,12 @@ body {
   padding-right:24px;
   padding-bottom:48px;
 }
+/* While loading overlay is visible, body has no scroll/padding impact */
+body.is-loading {
+  overflow:hidden;
+  height:100vh;
+  height:100dvh;
+}
 body::before {
   content:'';
   position:fixed; inset:0;
@@ -651,22 +657,41 @@ body.auth-open { overflow:hidden; pointer-events:none; }
    LOADING OVERLAY
    ════════════════════════════════════════════ */
 #loading-overlay {
-  position:fixed; inset:0; z-index:300;
-  background:var(--bg);
-  display:flex;
+  /* Bulletproof fullscreen — overrides everything including body padding,
+     topbar, safe-area insets on iOS */
+  position:fixed !important;
+  top:0 !important; left:0 !important;
+  right:0 !important; bottom:0 !important;
+  width:100vw !important;
+  height:100vh !important;
+  /* iOS safe area */
+  height:100dvh !important;
+  z-index:9999 !important;
+  background:var(--bg) !important;
+  /* Reset any inherited padding/margin from body */
+  padding:0 !important;
+  margin:0 !important;
+  /* Centering */
+  display:flex !important;
+  flex-direction:column;
   align-items:center;
   justify-content:center;
-  padding:24px;
+  /* Prevent scroll-through */
+  overflow:hidden;
+  touch-action:none;
 }
 .loading-card {
   display:flex;
   flex-direction:column;
   align-items:center;
-  gap:12px;
+  gap:14px;
   width:100%;
-  max-width:320px;
+  /* constrain width on all screen sizes */
+  max-width:min(320px, 80vw);
   text-align:center;
-  padding:32px 24px;
+  /* internal padding only — not on overlay */
+  padding:0 24px;
+  /* no margin-top — flexbox centers it */
 }
 .loading-brand {
   font-family:'Inter',sans-serif;
@@ -675,19 +700,22 @@ body.auth-open { overflow:hidden; pointer-events:none; }
   letter-spacing:.22em;
   text-transform:uppercase;
   color:var(--accent);
+  margin:0;
 }
 .loading-title {
   font-family:'Inter',sans-serif;
   font-weight:900;
-  font-size:clamp(20px, 5vw, 28px);
+  /* fluid: 20px on 320px screen, 28px on 600px+ */
+  font-size:clamp(20px, 6vw, 28px);
   letter-spacing:-.04em;
   color:var(--text);
   line-height:1.1;
+  margin:0;
 }
 .loading-dots {
   display:flex;
   gap:8px;
-  margin-top:4px;
+  margin:4px 0 0;
 }
 .loading-status {
   font-family:'DM Mono',monospace;
@@ -695,6 +723,7 @@ body.auth-open { overflow:hidden; pointer-events:none; }
   color:var(--muted);
   letter-spacing:.1em;
   text-transform:uppercase;
+  margin:0;
 }
 .loading-dot {
   width:8px; height:8px;
@@ -702,7 +731,10 @@ body.auth-open { overflow:hidden; pointer-events:none; }
   background:var(--accent);
   animation:loadPulse 1.2s ease-in-out infinite;
 }
-@keyframes loadPulse { 0%,100%{opacity:.2;transform:scale(.8)} 50%{opacity:1;transform:scale(1.1)} }
+@keyframes loadPulse {
+  0%,100% { opacity:.2; transform:scale(.8); }
+  50%      { opacity:1;  transform:scale(1.1); }
+}
 
 /* ════════════════════════════════════════════
    USER ROLES & ASSIGNMENT

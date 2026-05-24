@@ -9,6 +9,8 @@ function showLoading(show, msg) {
   var txt = document.getElementById("loading-status");
   if (el)  el.style.display = show ? "flex" : "none";
   if (txt && msg) txt.textContent = msg;
+  // body class prevents scroll/layout shift while overlay is visible
+  document.body.classList.toggle("is-loading", show);
   console.log("[LOADING]", show, msg || "");
 }
 
