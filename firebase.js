@@ -4,14 +4,26 @@
 firebase.initializeApp(FIREBASE_CONFIG);
 
 // ── Loading overlay ───────────────────────────────────────────
+var _loadingTimer = null;
+
 function showLoading(show, msg) {
   var el  = document.getElementById("loading-overlay");
   var txt = document.getElementById("loading-status");
   if (el)  el.style.display = show ? "flex" : "none";
   if (txt && msg) txt.textContent = msg;
-  // body class prevents scroll/layout shift while overlay is visible
   document.body.classList.toggle("is-loading", show);
   console.log("[LOADING]", show, msg || "");
+
+  // Safety timeout — always hide after 10s no matter what
+  if (show) {
+    clearTimeout(_loadingTimer);
+    _loadingTimer = setTimeout(function() {
+      console.warn("[LOADING] Safety timeout — forcing hide");
+      showLoading(false, "");
+    }, 10000);
+  } else {
+    clearTimeout(_loadingTimer);
+  }
 }
 
 // ── Sync status bar ───────────────────────────────────────────
@@ -57,14 +69,13 @@ firebase.auth().onAuthStateChanged(function(user) {
     .catch(function(err) {
       console.error("[AUTH] Startup error:", err);
       showLoading(false);
-      alert("Errore di avvio: " + err.message + "\n\nControllare la console per dettagli.");
+      alert("Errore di avvio: " + err.message);
     });
 });
 
 // ── Check DB, migrate if needed ───────────────────────────────
 function checkAndMigrate() {
   console.log("[DB] checkAndMigrate start");
-  showLoading(true, "Controllo dati…");
 
   dbRef("groups").once("value")
     .then(function(snap) {
@@ -77,18 +88,17 @@ function checkAndMigrate() {
       }
 
       // No v2 — check v1
-      showLoading(true, "Nessun dato v2, controllo v1…");
       console.log("[DB] No v2 data — checking v1");
+      showLoading(true, "Controllo dati precedenti…");
 
       return firebase.database().ref("piano/v1/groups").once("value")
         .then(function(v1snap) {
           console.log("[DB] v1 groups exists:", v1snap.exists());
 
           if (v1snap.exists()) {
-            showLoading(true, "Migrazione dati v1…");
+            showLoading(true, "Migrazione dati…");
             return firebase.database().ref("piano/v1").once("value")
               .then(function(full) {
-                console.log("[DB] Migrating v1 data…");
                 return dbMigrateFromV1(full.val());
               })
               .then(function() {
@@ -96,7 +106,8 @@ function checkAndMigrate() {
                 startSubscription();
               });
           } else {
-            console.log("[DB] No v1 data either — starting empty");
+            // Truly empty DB — start immediately, don't wait for data
+            console.log("[DB] Empty DB — starting empty");
             startSubscription();
           }
         });
@@ -104,12 +115,13 @@ function checkAndMigrate() {
     .catch(function(err) {
       console.error("[DB] checkAndMigrate error:", err);
       showLoading(false);
-      alert("Errore database: " + err.message + "\n\nAssicurati che le regole Firebase siano aggiornate.");
+      alert("Errore database: " + err.message + "\n\nVerifica le regole Firebase.");
     });
 }
 
 // ── Realtime subscription ─────────────────────────────────────
 var _firstLoad = true;
+
 function startSubscription() {
   console.log("[DB] startSubscription called");
   showLoading(true, "Caricamento dati…");
@@ -121,6 +133,8 @@ function startSubscription() {
       render();
       renderTrasferte();
       applyRoleVisibility();
+
+      // Always hide on first callback — even if data is empty
       if (_firstLoad) {
         _firstLoad = false;
         console.log("[APP] First load complete — hiding overlay");
@@ -132,13 +146,30 @@ function startSubscription() {
     function(err) {
       console.error("[DB] Subscription error:", err);
       setSyncStatus("error", "Errore connessione");
-      showLoading(false);
-      alert("Errore connessione database: " + err.message);
+      // Hide loading even on error so user isn't stuck
+      if (_firstLoad) {
+        _firstLoad = false;
+        showLoading(false);
+      }
+      alert("Errore connessione: " + err.message);
     }
   );
+
+  // Hard fallback: if subscription never fires within 8s, hide loading anyway
+  setTimeout(function() {
+    if (_firstLoad) {
+      _firstLoad = false;
+      console.warn("[DB] Subscription timeout — forcing hide");
+      showLoading(false);
+      setSyncStatus("error", "Timeout connessione");
+      render();
+      renderTrasferte();
+      if (typeof initUserPanel === "function") initUserPanel();
+    }
+  }, 8000);
 }
 
-// ── Override cycleStatus: per-field write + permission check ──
+// ── Override cycleStatus ──────────────────────────────────────
 function cycleStatus(gid, tid) {
   var task = findTask(gid, tid);
   if (!task) return;
