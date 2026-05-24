@@ -212,12 +212,14 @@ function applyRoleVisibility() {
 function initUserPanel() {
   if (!isCapoCantiere()) return;
 
-  // Show the Utenti button
-  var btn = document.getElementById("btn-user-panel");
-  if (btn) btn.style.display = "inline-flex";
+  // Show admin section in side menu
+  var adminSection = document.getElementById("menu-admin-section");
+  if (adminSection) adminSection.style.display = "block";
 
-  // Open panel
+  // Wire user panel button in side menu
+  var btn = document.getElementById("btn-user-panel");
   btn && btn.addEventListener("click", function() {
+    if (typeof closeMenu === "function") closeMenu();
     openUserPanel();
   });
 
@@ -246,55 +248,148 @@ function closeUserPanel() {
 function renderUserList() {
   var list = document.getElementById("user-list");
   if (!list) return;
+  list.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px 0">Caricamento...</div>';
 
-  // Refresh user list from Firebase
-  firebase.database().ref("users").once("value", function(snap) {
-    allUsers = snap.val() || {};
-    var uids  = Object.keys(allUsers);
+  firebase.database().ref("users").once("value")
+    .then(function(snap) {
+      allUsers = snap.val() || {};
+      rebuildUserListHtml(list);
+    })
+    .catch(function(err) {
+      list.innerHTML = '<div style="color:var(--danger);font-size:12px">Errore: ' + err.message + '</div>';
+    });
+}
 
-    if (uids.length === 0) {
-      list.innerHTML = '<div style="color:var(--muted);font-size:13px">Nessun utente registrato.</div>';
-      return;
-    }
+function rebuildUserListHtml(list) {
+  var uids = Object.keys(allUsers);
 
-    list.innerHTML = uids.map(function(uid) {
-      var u    = allUsers[uid];
-      var role = u.role || "operaio";
-      return '<div class="user-list-item" data-uid="' + uid + '">' +
-        '<div class="user-list-info">' +
-          '<span class="user-list-name">' + escHtml(u.name || u.email) + '</span>' +
-          '<span class="user-list-email">' + escHtml(u.email || "") + '</span>' +
-        '</div>' +
+  // ── User rows ──────────────────────────────────────────────
+  var rows = uids.map(function(uid) {
+    var u    = allUsers[uid];
+    var role = u.role || "operaio";
+    var isPreregistered = !u.createdAt;   // pre-added by capo, never logged in
+    return '<div class="user-list-item" data-uid="' + uid + '">' +
+      '<div class="user-list-info">' +
+        '<span class="user-list-name">' + escHtml(u.name || u.email) +
+          (isPreregistered ? ' <span class="pre-reg-badge">In attesa</span>' : '') +
+        '</span>' +
+        '<span class="user-list-email">' + escHtml(u.email || "") + '</span>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:6px">' +
         '<select class="user-role-select" data-uid="' + uid + '">' +
           '<option value="operaio"'       + (role === "operaio"       ? " selected" : "") + '>Operaio</option>' +
           '<option value="capo_cantiere"' + (role === "capo_cantiere" ? " selected" : "") + '>Capo Cantiere</option>' +
         '</select>' +
-      '</div>';
-    }).join("");
+        '<button class="icon-btn danger" style="width:20px;height:20px;font-size:11px;flex-shrink:0" ' +
+          'data-action="delete-user" data-uid="' + uid + '" title="Rimuovi utente">&#x2715;</button>' +
+      '</div>' +
+    '</div>';
+  }).join("");
 
-    // Wire role change dropdowns
-    list.querySelectorAll(".user-role-select").forEach(function(sel) {
-      sel.addEventListener("change", function() {
-        var uid     = this.dataset.uid;
-        var newRole = this.value;
-        firebase.database().ref("users/" + uid + "/role").set(newRole)
-          .then(function() {
-            if (allUsers[uid]) allUsers[uid].role = newRole;
-            // Re-render the badge next to the name
-            var item = list.querySelector('.user-list-item[data-uid="' + uid + '"]');
-            if (item) {
-              var badge = item.querySelector(".user-role-badge");
-              if (badge) {
-                badge.className = "user-role role-" + newRole;
-                badge.textContent = newRole === "capo_cantiere" ? "Capo Cantiere" : "Operaio";
-              }
-            }
-          })
-          .catch(function(err) {
-            alert("Errore aggiornamento ruolo: " + err.message);
-            sel.value = allUsers[uid] ? allUsers[uid].role : "operaio"; // revert
-          });
-      });
+  if (!rows) rows = '<div style="color:var(--muted);font-size:13px;margin-bottom:16px">Nessun utente registrato.</div>';
+
+  // ── Add user form ──────────────────────────────────────────
+  var addForm =
+    '<div class="add-user-form">' +
+      '<div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Aggiungi utente</div>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+        '<input class="field-input" id="new-user-name"  placeholder="Nome" style="flex:1;min-width:100px;font-size:13px;padding:8px 10px" />' +
+        '<input class="field-input" id="new-user-email" placeholder="email@fusaroimpianti.it" type="email" style="flex:2;min-width:160px;font-size:13px;padding:8px 10px" />' +
+        '<select class="user-role-select" id="new-user-role" style="flex-shrink:0">' +
+          '<option value="operaio">Operaio</option>' +
+          '<option value="capo_cantiere">Capo Cantiere</option>' +
+        '</select>' +
+        '<button class="auth-btn" id="btn-add-user" style="padding:8px 14px;font-size:12px;margin:0;flex-shrink:0;width:auto">+ Aggiungi</button>' +
+      '</div>' +
+      '<div class="auth-error" id="add-user-error" style="text-align:left;margin-top:6px"></div>' +
+    '</div>';
+
+  list.innerHTML = rows + addForm;
+
+  // ── Wire role dropdowns ────────────────────────────────────
+  list.querySelectorAll(".user-role-select[data-uid]").forEach(function(sel) {
+    sel.addEventListener("change", function() {
+      var uid     = this.dataset.uid;
+      var newRole = this.value;
+      firebase.database().ref("users/" + uid + "/role").set(newRole)
+        .then(function() {
+          if (allUsers[uid]) allUsers[uid].role = newRole;
+        })
+        .catch(function(err) {
+          alert("Errore aggiornamento ruolo: " + err.message);
+          sel.value = allUsers[uid] ? allUsers[uid].role : "operaio";
+        });
     });
+  });
+
+  // ── Wire delete buttons ────────────────────────────────────
+  list.querySelectorAll('[data-action="delete-user"]').forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      var uid  = this.dataset.uid;
+      var name = allUsers[uid] ? (allUsers[uid].name || allUsers[uid].email) : uid;
+      if (!confirm('Rimuovere ' + name + '?')) return;
+      firebase.database().ref("users/" + uid).remove()
+        .then(function() {
+          delete allUsers[uid];
+          renderUserList();
+        })
+        .catch(function(err) {
+          alert("Errore rimozione: " + err.message);
+        });
+    });
+  });
+
+  // ── Wire add user form ─────────────────────────────────────
+  document.getElementById("btn-add-user").addEventListener("click", function() {
+    var name  = (document.getElementById("new-user-name").value  || "").trim();
+    var email = (document.getElementById("new-user-email").value || "").trim().toLowerCase();
+    var role  = document.getElementById("new-user-role").value;
+    var errEl = document.getElementById("add-user-error");
+    errEl.textContent = "";
+
+    if (!name)  { errEl.textContent = "Inserisci il nome.";  return; }
+    if (!email) { errEl.textContent = "Inserisci l'email.";  return; }
+    if (!email.endsWith("@fusaroimpianti.it")) {
+      errEl.textContent = "Email deve essere @fusaroimpianti.it";
+      return;
+    }
+
+    // Check if email already exists
+    var existingUid = Object.keys(allUsers).find(function(uid) {
+      return allUsers[uid].email === email;
+    });
+    if (existingUid) {
+      errEl.textContent = "Utente con questa email già registrato.";
+      return;
+    }
+
+    // Use email as a stable key (sanitised) since we don't have their UID yet
+    // When they first log in, registerUser() in index-auth.js will use their real UID.
+    // We store the record keyed by a placeholder; on login we match by email.
+    var placeholderKey = "pre_" + email.replace(/[.@]/g, "_");
+
+    var record = {
+      uid:    placeholderKey,
+      email:  email,
+      name:   name,
+      role:   role,
+      preRegistered: true
+    };
+
+    firebase.database().ref("users/" + placeholderKey).set(record)
+      .then(function() {
+        allUsers[placeholderKey] = record;
+        document.getElementById("new-user-name").value  = "";
+        document.getElementById("new-user-email").value = "";
+        rebuildUserListHtml(list);
+      })
+      .catch(function(err) {
+        errEl.textContent = "Errore: " + err.message;
+      });
+  });
+
+  // Allow Enter on email field
+  document.getElementById("new-user-email").addEventListener("keydown", function(e) {
+    if (e.key === "Enter") document.getElementById("btn-add-user").click();
   });
 }
