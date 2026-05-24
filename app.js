@@ -608,38 +608,48 @@ function renderCardList() {
 
         var canEdit = typeof canEditTask !== 'function' || canEditTask(task);
 
+        // Status icon
+        var statusIcon =
+          task.status === 'done'    ? '<svg viewBox="0 0 20 20" fill="none" stroke="#52d9a0" stroke-width="2.2" width="18" height="18"><polyline points="4,10 8,14 16,6"/></svg>' :
+          task.status === 'partial' ? '<svg viewBox="0 0 20 20" fill="none" stroke="#f7c948" stroke-width="2" width="18" height="18"><circle cx="10" cy="10" r="7"/><polyline points="10,6 10,10 13,12"/></svg>' :
+                                      '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="18" height="18"><circle cx="10" cy="10" r="7"/></svg>';
+
+        var badges = prioBadgeHtml(task.priority) +
+          dueBadgeHtml(task.dueDate) +
+          (typeof assignmentBadgeHtml === 'function' ? assignmentBadgeHtml(task) : '');
+
         card.innerHTML =
-          '<div class="card-task-top">' +
-            '<span class="card-task-name" style="border-left:3px solid ' + c.color + ';padding-left:10px">' +
+          '<div class="card-task-header">' +
+            '<span class="card-task-name" style="border-left:3px solid ' + c.color + ';padding-left:9px">' +
               escHtml(task.name) +
             '</span>' +
+            '<div class="card-task-icons">' +
+              '<button class="card-icon-btn card-status-icon status-' + task.status + '" title="Cambia stato">' +
+                statusIcon +
+              '</button>' +
+              (canEdit ?
+                '<button class="card-icon-btn card-edit-icon" data-action="edit-task" data-task="' + task.id + '" data-group="' + group.id + '" title="Modifica">' +
+                  '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16"><path d="M14 3l3 3-9 9H5v-3L14 3z"/></svg>' +
+                '</button>' +
+                '<button class="card-icon-btn card-delete-icon" data-action="delete-task" data-task="' + task.id + '" data-group="' + group.id + '" title="Elimina">' +
+                  '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16"><line x1="5" y1="5" x2="15" y2="15"/><line x1="15" y1="5" x2="5" y2="15"/></svg>' +
+                '</button>'
+              : '') +
+            '</div>' +
           '</div>' +
-          '<div class="card-task-badges">' +
-            prioBadgeHtml(task.priority) +
-            dueBadgeHtml(task.dueDate) +
-            (typeof assignmentBadgeHtml === 'function' ? assignmentBadgeHtml(task) : '') +
-          '</div>' +
+          (badges ? '<div class="card-task-badges">' + badges + '</div>' : '') +
           '<div class="card-task-meta">' +
-            '<span><b>' + (isNaN(parseNum(task.days)) ? '—' : fmtNum(parseNum(task.days))) + '</b> giorni</span>' +
+            '<span><b>' + (isNaN(parseNum(task.days)) ? '—' : fmtNum(parseNum(task.days))) + '</b> g</span>' +
             '<span><b>×' + task.people + '</b> pers.</span>' +
             '<span><b>' + fmtNum(gu) + '</b> G·U</span>' +
-          '</div>' +
-          '<button class="status-btn" data-status="' + task.status + '" data-task="' + task.id + '" data-group="' + group.id + '" style="' + (!canEdit ? 'pointer-events:none;opacity:.5' : '') + '">' +
-            '<span class="btn-dot"></span>' +
-            '<span class="btn-label">' + (LABELS[task.status] || '–') + '</span>' +
-          '</button>' +
-          (canEdit ?
-            '<div class="card-task-actions">' +
-              '<button class="card-edit-btn" data-action="edit-task" data-task="' + task.id + '" data-group="' + group.id + '">✎ Modifica</button>' +
-              '<button class="card-edit-btn danger" data-action="delete-task" data-task="' + task.id + '" data-group="' + group.id + '">✕</button>' +
-            '</div>' : '');
+          '</div>';
 
-        // Wire status button
-        card.querySelector('.status-btn').addEventListener('click', function() {
-          if (typeof cycleStatus === 'function') cycleStatus(group.id, task.id);
+        // Wire status icon
+        card.querySelector('.card-status-icon').addEventListener('click', function() {
+          if (canEdit && typeof cycleStatus === 'function') cycleStatus(group.id, task.id);
         });
 
-        // Wire action buttons
+        // Wire edit/delete
         card.querySelectorAll('[data-action]').forEach(function(btn) {
           btn.addEventListener('click', function() {
             var action = this.dataset.action;
