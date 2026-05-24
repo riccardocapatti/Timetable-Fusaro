@@ -42,67 +42,79 @@
 <!-- MAIN APP -->
 <div class="container">
 
-  <header>
-    <div>
-      <h1><span>Piano di Lavoro</span>Attività &amp; Tempistiche</h1>
-      <div class="header-actions">
-        <button class="export-btn" id="btn-user-panel" style="display:none">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12">
-            <circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/>
-          </svg>
-          Utenti
-        </button>
-        <button class="toggle-done-btn" id="btn-toggle-done">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12">
-            <path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/>
-          </svg>
-          Nascondi completate
-        </button>
-        <button class="export-btn" id="btn-theme">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12">
-            <circle cx="8" cy="8" r="3.5"/>
-            <line x1="8" y1="1" x2="8" y2="2.5"/><line x1="8" y1="13.5" x2="8" y2="15"/>
-            <line x1="1" y1="8" x2="2.5" y2="8"/><line x1="13.5" y1="8" x2="15" y2="8"/>
-            <line x1="3" y1="3" x2="4.1" y2="4.1"/><line x1="11.9" y1="11.9" x2="13" y2="13"/>
-            <line x1="13" y1="3" x2="11.9" y2="4.1"/><line x1="4.1" y1="11.9" x2="3" y2="13"/>
-          </svg>
-          Tema chiaro
-        </button>
-        <button class="export-btn" id="btn-export-json">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12">
-            <path d="M4 2h6l3 3v9H4V2z"/><path d="M10 2v3h3"/><path d="M6 9h4M6 11.5h2.5"/>
-          </svg>
-          Esporta JSON
-        </button>
-        <button class="export-btn" id="btn-import-json">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12">
-            <path d="M2 10v4h12v-4M8 2v8M5 7l3 3 3-3"/>
-          </svg>
-          Importa JSON
-        </button>
-        <input type="file" id="import-file-input" accept=".json" style="display:none">
-        <button class="export-btn" id="btn-export-all">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12">
-            <path d="M2 10v4h12v-4M8 2v8M5 7l3 3 3-3"/>
-          </svg>
-          Esporta PDF
-        </button>
+  <!-- TOP BAR (hamburger + title + sync) -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">Fusaro Impianti</div>
+      <div class="topbar-title">Piano di Lavoro</div>
+    </div>
+    <div class="topbar-right">
+      <div id="sync-bar" style="display:none">
+        <span class="sync-dot"></span>
+        <span id="sync-text">—</span>
+      </div>
+      <div id="user-badge"></div>
+      <button class="hamburger-btn" id="btn-hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- SLIDE-OUT MENU -->
+  <div class="menu-overlay" id="menu-overlay"></div>
+  <nav class="side-menu" id="side-menu">
+    <div class="side-menu-header">
+      <div class="side-menu-title">Menu</div>
+      <button class="icon-btn" id="btn-close-menu" style="width:28px;height:28px;font-size:16px">&#x2715;</button>
+    </div>
+
+    <div class="side-menu-section">
+      <div class="side-menu-label">Vista</div>
+      <button class="menu-item" id="btn-toggle-done">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15"><path d="M1 8s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="8" cy="8" r="2"/></svg>
+        <span id="toggle-done-label">Nascondi completate</span>
+      </button>
+    </div>
+
+    <div class="side-menu-section">
+      <div class="side-menu-label">Tema</div>
+      <div class="theme-switcher">
+        <button class="theme-opt" data-theme="dark"   id="theme-dark">🌙 Scuro</button>
+        <button class="theme-opt" data-theme="light"  id="theme-light">☀️ Chiaro</button>
+        <button class="theme-opt" data-theme="mobile" id="theme-mobile">📱 Mobile</button>
       </div>
     </div>
-    <div class="meta">
-      <div class="logo">fusaroimpianti.it</div>
-      <div>Adria (RO) &middot; P.IVA 01415100294</div>
-      <div>Agg.: 26/04/2026</div>
-      <div>Revisione: 2.1 beta</div>
-      <div style="margin-top:8px;display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-        <div id="user-badge"></div>
-        <div id="sync-bar" style="display:none">
-          <span class="sync-dot"></span>
-          <span id="sync-text">—</span>
-        </div>
-      </div>
+
+    <div class="side-menu-section">
+      <div class="side-menu-label">Dati</div>
+      <button class="menu-item" id="btn-export-json">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15"><path d="M4 2h6l3 3v9H4V2z"/><path d="M10 2v3h3"/><path d="M6 9h4M6 11.5h2.5"/></svg>
+        Esporta JSON
+      </button>
+      <button class="menu-item" id="btn-import-json">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15"><path d="M2 10v4h12v-4M8 2v8M5 7l3 3 3-3"/></svg>
+        Importa JSON
+      </button>
+      <input type="file" id="import-file-input" accept=".json" style="display:none">
+      <button class="menu-item" id="btn-export-all">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15"><path d="M2 10v4h12v-4M8 2v8M5 7l3 3 3-3"/></svg>
+        Esporta PDF
+      </button>
     </div>
-  </header>
+
+    <div class="side-menu-section" id="menu-admin-section" style="display:none">
+      <div class="side-menu-label">Amministrazione</div>
+      <button class="menu-item" id="btn-user-panel">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15"><circle cx="8" cy="5" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+        Gestione Utenti
+      </button>
+    </div>
+
+    <div class="side-menu-footer">
+      <div class="side-meta">fusaroimpianti.it &middot; Adria (RO)</div>
+      <div class="side-meta">Revisione: 2.2 beta</div>
+    </div>
+  </nav>
 
   <div class="summary">
     <div class="pill"><span class="pill-label">Totale Attività</span><span class="pill-value" id="pill-total">—</span></div>
@@ -128,6 +140,9 @@
       <tbody id="table-body"></tbody>
     </table>
   </div>
+
+  <!-- CARD LIST — shown in mobile theme instead of table -->
+  <div id="card-list-container" style="display:none"></div>
 
   <div class="add-group-btn-wrap">
     <button class="add-group-btn" id="btn-add-group">
