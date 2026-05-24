@@ -15,15 +15,17 @@
 <body>
 
 <!-- LOADING OVERLAY — shown until Firebase auth + data resolves -->
-<div id="loading-overlay" style="position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
-  <div style="font-family:'Inter',sans-serif;font-weight:800;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent)">Fusaro Impianti S.r.l.</div>
-  <div style="font-family:'Inter',sans-serif;font-weight:900;font-size:28px;letter-spacing:-.04em;color:var(--text)">Piano di Lavoro</div>
-  <div style="display:flex;gap:6px;margin-top:8px">
-    <div class="loading-dot" style="animation-delay:0s"></div>
-    <div class="loading-dot" style="animation-delay:.2s"></div>
-    <div class="loading-dot" style="animation-delay:.4s"></div>
+<div id="loading-overlay">
+  <div class="loading-card">
+    <div class="loading-brand">Fusaro Impianti S.r.l.</div>
+    <div class="loading-title">Piano di Lavoro</div>
+    <div class="loading-dots">
+      <div class="loading-dot" style="animation-delay:0s"></div>
+      <div class="loading-dot" style="animation-delay:.2s"></div>
+      <div class="loading-dot" style="animation-delay:.4s"></div>
+    </div>
+    <div class="loading-status" id="loading-status">Autenticazione&hellip;</div>
   </div>
-  <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:.1em" id="loading-status">Autenticazione&hellip;</div>
 </div>
 
 <!-- USER MANAGEMENT PANEL (capo_cantiere only) -->
