@@ -16,7 +16,9 @@
 
 <!-- LOADING OVERLAY — shown until Firebase auth + data resolves -->
 <div id="loading-overlay">
-  <div class="loading-card">
+
+  <!-- Normal loading state -->
+  <div class="loading-card" id="loading-state-normal">
     <div class="loading-brand">Fusaro Impianti S.r.l.</div>
     <div class="loading-title">Piano di Lavoro</div>
     <div class="loading-dots">
@@ -26,6 +28,16 @@
     </div>
     <div class="loading-status" id="loading-status">Autenticazione&hellip;</div>
   </div>
+
+  <!-- Error state (shown on DB or auth failure) -->
+  <div class="loading-card" id="loading-state-error" style="display:none">
+    <div class="loading-brand">Fusaro Impianti S.r.l.</div>
+    <div class="loading-error-icon">&#9888;</div>
+    <div class="loading-title" style="font-size:clamp(16px,4vw,22px)">Errore di connessione</div>
+    <div class="loading-error-msg" id="loading-error-msg">Si &egrave; verificato un errore.</div>
+    <button class="loading-retry-btn" id="btn-loading-retry">Riprova</button>
+  </div>
+
 </div>
 
 <!-- USER MANAGEMENT PANEL (capo_cantiere only) -->

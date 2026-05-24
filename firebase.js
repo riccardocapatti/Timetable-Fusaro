@@ -4,26 +4,30 @@
 firebase.initializeApp(FIREBASE_CONFIG);
 
 // ── Loading overlay ───────────────────────────────────────────
-var _loadingTimer = null;
-
 function showLoading(show, msg) {
   var el  = document.getElementById("loading-overlay");
   var txt = document.getElementById("loading-status");
-  if (el)  el.style.display = show ? "flex" : "none";
+  if (el)  el.classList.toggle("hidden", !show);
   if (txt && msg) txt.textContent = msg;
   document.body.classList.toggle("is-loading", show);
   console.log("[LOADING]", show, msg || "");
 
-  // Safety timeout — always hide after 10s no matter what
-  if (show) {
-    clearTimeout(_loadingTimer);
-    _loadingTimer = setTimeout(function() {
-      console.warn("[LOADING] Safety timeout — forcing hide");
-      showLoading(false, "");
-    }, 10000);
-  } else {
-    clearTimeout(_loadingTimer);
-  }
+
+}
+
+// ── Loading error screen ─────────────────────────────────────
+function showLoadingError(msg) {
+  // Keep overlay visible but switch to error state
+  var normal = document.getElementById("loading-state-normal");
+  var error  = document.getElementById("loading-state-error");
+  var errMsg = document.getElementById("loading-error-msg");
+  if (normal) normal.style.display = "none";
+  if (error)  error.style.display  = "flex";
+  if (errMsg) errMsg.textContent   = msg || "Si è verificato un errore imprevisto.";
+  // Wire retry button — just reload the page
+  var retryBtn = document.getElementById("btn-loading-retry");
+  if (retryBtn) retryBtn.onclick = function() { window.location.reload(); };
+  console.error("[ERROR SCREEN]", msg);
 }
 
 // ── Sync status bar ───────────────────────────────────────────
@@ -68,8 +72,7 @@ firebase.auth().onAuthStateChanged(function(user) {
     })
     .catch(function(err) {
       console.error("[AUTH] Startup error:", err);
-      showLoading(false);
-      alert("Errore di avvio: " + err.message);
+      showLoadingError("Errore di avvio: " + err.message);
     });
 });
 
@@ -114,8 +117,7 @@ function checkAndMigrate() {
     })
     .catch(function(err) {
       console.error("[DB] checkAndMigrate error:", err);
-      showLoading(false);
-      alert("Errore database: " + err.message + "\n\nVerifica le regole Firebase.");
+      showLoadingError("Errore database: " + err.message + " — Verifica le regole Firebase.");
     });
 }
 
@@ -145,28 +147,16 @@ function startSubscription() {
     },
     function(err) {
       console.error("[DB] Subscription error:", err);
-      setSyncStatus("error", "Errore connessione");
-      // Hide loading even on error so user isn't stuck
       if (_firstLoad) {
         _firstLoad = false;
-        showLoading(false);
+        showLoadingError("Errore connessione al database: " + err.message);
+      } else {
+        setSyncStatus("error", "Errore connessione");
       }
-      alert("Errore connessione: " + err.message);
     }
   );
 
-  // Hard fallback: if subscription never fires within 8s, hide loading anyway
-  setTimeout(function() {
-    if (_firstLoad) {
-      _firstLoad = false;
-      console.warn("[DB] Subscription timeout — forcing hide");
-      showLoading(false);
-      setSyncStatus("error", "Timeout connessione");
-      render();
-      renderTrasferte();
-      if (typeof initUserPanel === "function") initUserPanel();
-    }
-  }, 8000);
+
 }
 
 // ── Override cycleStatus ──────────────────────────────────────

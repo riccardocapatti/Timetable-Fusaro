@@ -672,13 +672,16 @@ body.auth-open { overflow:hidden; pointer-events:none; }
   padding:0 !important;
   margin:0 !important;
   /* Centering */
-  display:flex !important;
+  display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
   /* Prevent scroll-through */
   overflow:hidden;
   touch-action:none;
+}
+#loading-overlay.hidden {
+  display:none !important;
 }
 .loading-card {
   display:flex;
@@ -735,6 +738,32 @@ body.auth-open { overflow:hidden; pointer-events:none; }
   0%,100% { opacity:.2; transform:scale(.8); }
   50%      { opacity:1;  transform:scale(1.1); }
 }
+.loading-error-icon {
+  font-size:36px;
+  margin:4px 0;
+}
+.loading-error-msg {
+  font-size:13px;
+  color:var(--muted);
+  text-align:center;
+  line-height:1.5;
+  max-width:260px;
+  margin:0 auto;
+}
+.loading-retry-btn {
+  margin-top:8px;
+  padding:10px 28px;
+  background:var(--accent);
+  border:none;
+  border-radius:8px;
+  font-family:'DM Sans',sans-serif;
+  font-size:14px;
+  font-weight:500;
+  color:#fff;
+  cursor:pointer;
+  transition:opacity .15s;
+}
+.loading-retry-btn:hover { opacity:.85; }
 
 /* ════════════════════════════════════════════
    USER ROLES & ASSIGNMENT
