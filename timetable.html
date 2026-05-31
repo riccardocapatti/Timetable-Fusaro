@@ -53,30 +53,27 @@
   </div>
 </div>
 
-<!-- MAIN APP -->
-<div class="container">
-
-  <!-- TOP BAR (hamburger + title + sync) -->
-  <div class="topbar">
-    <div class="topbar-left">
-      <div class="topbar-logo">Fusaro Impianti</div>
-      <div class="topbar-title">Piano di Lavoro</div>
-    </div>
-    <div class="topbar-right">
-      <div id="sync-bar" style="display:none">
-        <span class="sync-dot"></span>
-        <span id="sync-text">—</span>
-      </div>
-      <div id="user-badge"></div>
-      <button class="hamburger-btn" id="btn-hamburger" aria-label="Menu">
-        <span></span><span></span><span></span>
-      </button>
-    </div>
+<!-- TOP BAR — direct body child so fixed positioning is reliable -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">Fusaro Impianti</div>
+    <div class="topbar-title">Piano di Lavoro</div>
   </div>
+  <div class="topbar-right">
+    <div id="sync-bar" style="display:none">
+      <span class="sync-dot"></span>
+      <span id="sync-text">—</span>
+    </div>
+    <div id="user-badge"></div>
+    <button class="hamburger-btn" id="btn-hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</div>
 
-  <!-- SLIDE-OUT MENU -->
-  <div class="menu-overlay" id="menu-overlay"></div>
-  <nav class="side-menu" id="side-menu">
+<!-- SLIDE-OUT MENU — direct body child -->
+<div class="menu-overlay" id="menu-overlay"></div>
+<nav class="side-menu" id="side-menu">
     <div class="side-menu-header">
       <div class="side-menu-title">Menu</div>
       <button class="icon-btn" id="btn-close-menu" style="width:28px;height:28px;font-size:16px">&#x2715;</button>
@@ -128,7 +125,10 @@
       <div class="side-meta">fusaroimpianti.it &middot; Adria (RO)</div>
       <div class="side-meta">Revisione: 2.2 beta</div>
     </div>
-  </nav>
+</nav>
+
+<!-- MAIN APP -->
+<div class="container">
 
   <div class="summary">
     <div class="pill"><span class="pill-label">Totale Attività</span><span class="pill-value" id="pill-total">—</span></div>
