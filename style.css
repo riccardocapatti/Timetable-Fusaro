@@ -67,6 +67,187 @@ body.light .theme-opt.active                    { background:rgba(37,99,235,.12)
 body.light .user-role-select                    { background:rgba(0,0,0,.04); color:var(--text); }
 body.light .topbar { background:var(--bg); border-color:#b8c4d4; }
 
+/* ── GLASS THEME (Glassmorphism) ── */
+body.glass {
+  --bg:transparent;
+  --surface:rgba(255,255,255,.07);
+  --border:rgba(255,255,255,.15);
+  --accent:#7eb3ff;
+  --accent2:#ffd580;
+  --text:#f0f4ff;
+  --muted:rgba(200,215,255,.55);
+  --tag:rgba(255,255,255,.06);
+  --danger:#ff7eb3;
+  --grid-line:rgba(255,255,255,.03);
+  --modal-bg:rgba(20,24,48,.75);
+  --glass-blur:blur(16px);
+  --glass-border:rgba(255,255,255,.18);
+  --glass-shadow:0 8px 32px rgba(0,0,0,.35);
+  --card-radius:14px;
+}
+
+/* Aurora background — glass needs depth to blur through */
+body.glass::before {
+  content:'';
+  position:fixed; inset:0;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(100,60,220,.55) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 10%, rgba(40,120,255,.45) 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 80%, rgba(20,200,180,.35) 0%, transparent 50%),
+    radial-gradient(ellipse at 10% 75%, rgba(180,40,220,.3)  0%, transparent 50%),
+    linear-gradient(135deg, #0a0a1a 0%, #0d1535 50%, #0a1a2a 100%);
+  z-index:0;
+  pointer-events:none;
+  animation:auroraShift 18s ease-in-out infinite alternate;
+}
+@keyframes auroraShift {
+  0%   { filter:hue-rotate(0deg)   brightness(1); }
+  50%  { filter:hue-rotate(20deg)  brightness(1.08); }
+  100% { filter:hue-rotate(-15deg) brightness(.95); }
+}
+
+/* Glass surface mixin applied to all panels */
+body.glass .container { position:relative; z-index:1; }
+
+/* Topbar glass */
+body.glass .topbar {
+  background:rgba(15,20,50,.55) !important;
+  backdrop-filter:var(--glass-blur);
+  -webkit-backdrop-filter:var(--glass-blur);
+  border-bottom:1px solid var(--glass-border) !important;
+  box-shadow:0 1px 0 rgba(255,255,255,.08);
+}
+
+/* Pills glass */
+body.glass .pill {
+  background:var(--surface);
+  backdrop-filter:var(--glass-blur);
+  -webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid var(--glass-border);
+  box-shadow:var(--glass-shadow);
+}
+
+/* Table wrap glass */
+body.glass .table-wrap {
+  background:rgba(255,255,255,.04);
+  backdrop-filter:var(--glass-blur);
+  -webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid var(--glass-border);
+  box-shadow:var(--glass-shadow);
+}
+
+/* Table rows */
+body.glass thead tr { background:rgba(255,255,255,.06); }
+body.glass .group-header-inner { backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+body.glass .task-row:hover { background:rgba(255,255,255,.06); }
+body.glass .subtotal-row td { background:rgba(255,255,255,.03); }
+
+/* Glass status button */
+body.glass .status-btn {
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--glass-border);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  color:var(--muted);
+}
+body.glass .status-btn[data-status="partial"] {
+  background:rgba(255,213,128,.12);
+  border-color:rgba(255,213,128,.3);
+  color:#ffd580;
+}
+body.glass .status-btn[data-status="done"] {
+  background:rgba(80,220,160,.1);
+  border-color:rgba(80,220,160,.3);
+  color:#50dca0;
+}
+
+/* Glass modal */
+body.glass .modal {
+  background:rgba(15,20,50,.7);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border:1px solid var(--glass-border);
+  box-shadow:0 16px 48px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.12);
+}
+body.glass .modal-overlay { background:rgba(0,0,10,.6); backdrop-filter:blur(4px); }
+
+/* Glass field inputs */
+body.glass .field-input {
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--glass-border);
+  color:var(--text);
+}
+body.glass .field-input:focus { border-color:rgba(126,179,255,.6); }
+
+/* Glass side menu */
+body.glass .side-menu {
+  background:rgba(10,15,45,.7);
+  backdrop-filter:blur(24px);
+  -webkit-backdrop-filter:blur(24px);
+  border-left:1px solid var(--glass-border);
+  box-shadow:-8px 0 32px rgba(0,0,0,.4);
+}
+body.glass .menu-overlay { background:rgba(0,0,10,.4); backdrop-filter:blur(6px); }
+body.glass .menu-item:hover { background:rgba(255,255,255,.07); }
+body.glass .theme-opt { background:rgba(255,255,255,.05); border-color:var(--glass-border); }
+body.glass .theme-opt.active { background:rgba(126,179,255,.18); color:var(--accent); border-color:rgba(126,179,255,.4); }
+
+/* Glass notes */
+body.glass .notes {
+  background:rgba(255,255,255,.05);
+  backdrop-filter:var(--glass-blur);
+  -webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid var(--glass-border);
+  box-shadow:var(--glass-shadow);
+}
+
+/* Glass add-group button */
+body.glass .add-group-btn {
+  background:rgba(255,255,255,.04);
+  border-color:var(--glass-border);
+}
+body.glass .add-group-btn:hover {
+  background:rgba(126,179,255,.1);
+  border-color:rgba(126,179,255,.4);
+}
+
+/* Glass icon buttons */
+body.glass .icon-btn:hover { background:rgba(255,255,255,.1); border-color:var(--glass-border); }
+body.glass .hamburger-btn  { background:rgba(255,255,255,.08); border-color:var(--glass-border); }
+body.glass .hamburger-btn:hover { background:rgba(255,255,255,.14); }
+
+/* Glass mobile cards */
+body.glass .card-task {
+  background:rgba(255,255,255,.06);
+  backdrop-filter:var(--glass-blur);
+  -webkit-backdrop-filter:var(--glass-blur);
+  border:1px solid var(--glass-border);
+  border-top:none;
+  box-shadow:0 4px 16px rgba(0,0,0,.2);
+}
+body.glass .card-group-header {
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+}
+body.glass .card-icon-btn {
+  background:rgba(255,255,255,.07);
+  border-color:var(--glass-border);
+}
+body.glass .card-status-icon.status-done    { background:rgba(80,220,160,.15); border-color:rgba(80,220,160,.35); }
+body.glass .card-status-icon.status-partial { background:rgba(255,213,128,.12); border-color:rgba(255,213,128,.3); }
+
+/* Glass sync bar + user badge */
+body.glass #sync-bar {
+  background:rgba(255,255,255,.06);
+  border-color:var(--glass-border);
+  backdrop-filter:blur(8px);
+}
+body.glass .signout-btn { border-color:var(--glass-border); }
+body.glass .user-role   { border-color:var(--glass-border); }
+
+/* Glass loading overlay */
+body.glass #loading-overlay { background:rgba(8,12,35,.85) !important; backdrop-filter:blur(20px); }
+
 /* ── MOBILE THEME ── */
 body.mobile {
   --bg:#0f1117; --surface:#181c25; --border:#252a38;
@@ -81,13 +262,17 @@ body.mobile {
 /* Mobile: no grid background, cleaner */
 body.mobile::before { display:none; }
 
-/* Mobile: table replaced by cards — hide table entirely */
-body.mobile .table-wrap   { display:none; }
-body.mobile .add-group-btn-wrap { display:none; }
-body.mobile .hint         { display:none; }
+/* Mobile + Glass: table replaced by cards */
+body.mobile .table-wrap,
+body.glass  .table-wrap           { display:none; }
+body.mobile .add-group-btn-wrap,
+body.glass  .add-group-btn-wrap   { display:none; }
+body.mobile .hint,
+body.glass  .hint                 { display:none; }
 
-/* Mobile: card list shown instead */
-body.mobile .card-list    { display:block; }
+/* Card list shown in mobile and glass */
+body.mobile .card-list,
+body.glass  .card-list            { display:block; }
 
 /* mobile status-btn removed — status now an icon */
 
@@ -485,9 +670,11 @@ body.menu-open .side-menu {
 .theme-switcher {
   display:flex;
   gap:6px;
+  flex-wrap:wrap;
 }
 .theme-opt {
   flex:1;
+  min-width:60px;
   padding:8px 6px;
   background:rgba(255,255,255,.05);
   border:1px solid var(--border);

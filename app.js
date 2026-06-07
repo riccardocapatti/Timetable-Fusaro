@@ -537,7 +537,8 @@ function renderCardList() {
   var container = document.getElementById('card-list-container');
   if (!container) return;
 
-  var isMobile = document.body.classList.contains('mobile');
+  var isMobile = document.body.classList.contains('mobile') ||
+                 document.body.classList.contains('glass');
   container.style.display = isMobile ? 'block' : 'none';
   if (!isMobile) return;
 
@@ -715,15 +716,14 @@ var currentTheme = localStorage.getItem('fusaro_theme') || 'dark';
 
 function applyTheme(theme) {
   currentTheme = theme;
-  document.body.classList.remove('light','mobile');
+  document.body.classList.remove('light','mobile','glass');
   if (theme === 'light')  document.body.classList.add('light');
   if (theme === 'mobile') document.body.classList.add('mobile');
+  if (theme === 'glass')  document.body.classList.add('glass');
   localStorage.setItem('fusaro_theme', theme);
-  // Update active state on theme buttons
   document.querySelectorAll('.theme-opt').forEach(function(btn) {
     btn.classList.toggle('active', btn.dataset.theme === theme);
   });
-  // Re-render card list (mobile) or table (desktop)
   renderCardList();
 }
 
