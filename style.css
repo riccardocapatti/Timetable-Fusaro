@@ -541,7 +541,7 @@ body.white-glass #loading-overlay { background:rgba(200,220,240,.88); }
 .card-group-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; font-weight:500; display:flex; align-items:center; gap:8px; }
 .card-group-actions { display:flex; gap:6px; }
 .card-group-subtotal { font-family:'DM Mono',monospace; font-size:9px; padding:4px 12px 8px; display:flex; justify-content:space-between; background:rgba(5,8,30,.4); }
-body.white-glass .card-group-subtotal { background:rgba(200,215,240,.4); }
+body.white-glass .card-group-subtotal { background:rgba(220,232,248,.7); border-left:1px solid rgba(255,255,255,.85); border-right:1px solid rgba(255,255,255,.85); }
 .subtotal-remaining-text { color:var(--danger); }
 .subtotal-total-text     { color:rgba(240,244,255,.7); }
 body.white-glass .subtotal-remaining-text { color:#c0392b; }
@@ -558,7 +558,7 @@ body.white-glass .subtotal-total-text     { color:var(--muted); }
 .card-task.row-done { opacity:.4; }
 .card-task.row-done .card-task-name { text-decoration:line-through; }
 .card-task.row-partial .card-task-name { color:#ffd580; }
-body.white-glass .card-task { background:rgba(255,255,255,.55); }
+body.white-glass .card-task { background:rgba(255,255,255,.65); border-color:rgba(255,255,255,.85); }
 body.white-glass .card-task.row-partial .card-task-name { color:#a06000; }
 
 .card-task-header { display:flex; align-items:flex-start; gap:8px; }
@@ -572,6 +572,7 @@ body.white-glass .card-task-name { color:#0f1623; }
 .card-status-icon.status-done    { border-color:rgba(82,217,160,.4);  background:rgba(82,217,160,.08); }
 .card-edit-icon:hover   { background:rgba(79,142,247,.12); color:var(--accent); border-color:rgba(79,142,247,.35); }
 .card-delete-icon:hover { background:rgba(248,113,113,.12); color:var(--danger); border-color:rgba(248,113,113,.35); }
+body.white-glass .card-group      { box-shadow:0 4px 20px rgba(80,110,160,.15); border-radius:var(--card-radius); }
 body.white-glass .card-icon-btn { background:rgba(255,255,255,.5); border-color:var(--glass-border); color:var(--muted); }
 body.white-glass .card-status-icon.status-done    { background:rgba(0,160,80,.1);   border-color:rgba(0,160,80,.25); }
 body.white-glass .card-status-icon.status-partial { background:rgba(192,112,0,.1);  border-color:rgba(192,112,0,.25); }
@@ -715,4 +716,4 @@ body.white-glass .drag-ghost { background:rgba(29,110,245,.15); border-color:rgb
   .collapsed-row { display:table-row !important; }
 }
 
-body.white-glass .card-group-header { background-color:rgba(200,220,245,.65) !important; }
+body.white-glass .card-group-header { background-color:rgba(255,255,255,.6) !important; border:1px solid rgba(255,255,255,.85); }
