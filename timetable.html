@@ -125,8 +125,12 @@
     </div>
 
     <div class="side-menu-footer">
+      <button class="menu-item" id="btn-version-panel" style="margin-bottom:10px;opacity:.7">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="15" height="15"><circle cx="8" cy="8" r="6"/><line x1="8" y1="7" x2="8" y2="11"/><circle cx="8" cy="5" r=".5" fill="currentColor"/></svg>
+        Informazioni versione
+      </button>
       <div class="side-meta">fusaroimpianti.it &middot; Adria (RO)</div>
-      <div class="side-meta">Revisione: 2.2 beta</div>
+      <div class="side-meta" id="current-version-label">v0.05</div>
     </div>
 </nav>
 
@@ -140,6 +144,17 @@
     <div id="archive-list">
       <div style="color:var(--muted);font-size:13px">Caricamento&hellip;</div>
     </div>
+  </div>
+</div>
+
+<!-- VERSION PANEL -->
+<div id="version-panel" style="display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--modal-bg);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid var(--glass-border);border-radius:12px;padding:28px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div style="font-family:'Inter',sans-serif;font-weight:700;font-size:18px;color:var(--text)">ℹ️ Versione</div>
+      <button class="icon-btn" id="btn-close-version-panel" style="width:28px;height:28px;font-size:16px">&#x2715;</button>
+    </div>
+    <div id="version-list"></div>
   </div>
 </div>
 

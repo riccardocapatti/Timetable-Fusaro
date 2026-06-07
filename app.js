@@ -1303,3 +1303,75 @@ function deleteTrasferta(id) {
     });
   };
 })();
+
+// ─────────────────────────────────────────────
+// VERSION PANEL
+// ─────────────────────────────────────────────
+var VERSION_HISTORY = [
+  {
+    v: 'v0.05', date: '2026-06-07',
+    files: ['style.css', 'app.js', 'timetable.html'],
+    desc: 'CSS completo riscritto da zero. Rimossi tutti i duplicati. Glass Dark ripristinato. Testo bianco su scuro, nero su chiaro. Pannello versioni aggiunto.'
+  },
+  {
+    v: 'v0.04', date: '2026-06-06',
+    files: ['app.js', 'style.css'],
+    desc: 'Drag & drop per riordinare i gruppi (desktop + mobile long press). Colori gruppo non influenzano più il testo delle attività.'
+  },
+  {
+    v: 'v0.03', date: '2026-06-05',
+    files: ['app.js', 'db.js', 'users.js', 'timetable.html', 'style.css'],
+    desc: 'Archiviazione gruppi al posto dell\'eliminazione diretta. Pannello archivio con ripristino ed eliminazione definitiva.'
+  },
+  {
+    v: 'v0.02', date: '2026-06-04',
+    files: ['style.css', 'app.js', 'timetable.html'],
+    desc: 'Sistema temi semplificato: Glass Scuro e Glass Chiaro. Rimossi tema scuro classico, chiaro e mobile separato. Layout card automatico via media query ≤720px.'
+  },
+  {
+    v: 'v0.01', date: '2026-06-03',
+    files: ['app.js', 'db.js', 'users.js', 'firebase.js'],
+    desc: 'Sanity check funzioni DB. Tutte le operazioni (trasferte, gruppi, task) ora scrivono su Firebase v2. Corretti archivio, clone e toggle gruppi.'
+  },
+  {
+    v: 'v0.00', date: '2026-06-01',
+    files: ['tutti i file'],
+    desc: 'Prima versione alpha funzionante. Firebase Realtime DB, autenticazione email link, ruoli capo_cantiere / operaio, struttura dati v2 per nodo, interfaccia Glass UI.'
+  }
+];
+
+function openVersionPanel() {
+  var panel = document.getElementById('version-panel');
+  var list  = document.getElementById('version-list');
+  if (!panel || !list) return;
+
+  list.innerHTML = VERSION_HISTORY.map(function(entry) {
+    return '<div class="version-item">' +
+      '<span class="version-tag">' + entry.v + '</span>' +
+      '<span class="version-files">' + entry.files.length + ' file</span>' +
+      '<div>' +
+        '<div class="version-desc">' + entry.desc + '</div>' +
+        '<div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--muted);margin-top:3px;letter-spacing:.04em">' +
+          entry.date + ' &nbsp;·&nbsp; ' + entry.files.join(', ') +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  panel.style.display = 'flex';
+}
+
+function closeVersionPanel() {
+  var panel = document.getElementById('version-panel');
+  if (panel) panel.style.display = 'none';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var btn      = document.getElementById('btn-version-panel');
+  var closeBtn = document.getElementById('btn-close-version-panel');
+  var panel    = document.getElementById('version-panel');
+
+  btn      && btn.addEventListener('click',      function() { if (typeof closeMenu==='function') closeMenu(); openVersionPanel(); });
+  closeBtn && closeBtn.addEventListener('click', closeVersionPanel);
+  panel    && panel.addEventListener('click',    function(e) { if (e.target===panel) closeVersionPanel(); });
+});
