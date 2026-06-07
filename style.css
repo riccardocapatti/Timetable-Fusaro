@@ -377,8 +377,9 @@ body.glass .group-header-inner { backdrop-filter:blur(8px); -webkit-backdrop-fil
 }
 .card-task:last-of-type { border-radius:0 0 var(--card-radius,10px) var(--card-radius,10px); }
 .card-task.row-done { opacity:.45; }
-.card-task.row-done .card-task-name { text-decoration:line-through; color:var(--muted); }
-.card-task.row-partial .card-task-name { color:var(--accent2); }
+.card-task.row-done .card-task-name { text-decoration:line-through; opacity:.5; }
+.card-task.row-partial .card-task-name { color:#ffd580; }
+body.white-glass .card-task.row-partial .card-task-name { color:#a06000; }
 
 /* Card header: name on left, icon buttons on right */
 .card-task-header {
@@ -486,8 +487,8 @@ body.glass .group-header-inner { backdrop-filter:blur(8px); -webkit-backdrop-fil
    BASE LAYOUT
    ════════════════════════════════════════════ */
 body {
-  background:var(--bg);
-  color:var(--text);
+  /* background set by theme (glass dark = #080c23, white-glass = #c8d8ec) */
+  color:#f0f4ff; /* default white text for glass dark */
   font-family:'DM Sans',sans-serif;
   font-weight:300;
   min-height:100vh;
@@ -495,24 +496,16 @@ body {
   padding-left:24px;
   padding-right:24px;
   padding-bottom:48px;
-  /* Never allow horizontal scroll — menu should never push content */
   overflow-x:hidden;
 }
+body.white-glass { color:#0f1623; }
 /* While loading overlay is visible, body has no scroll/padding impact */
 body.is-loading {
   overflow:hidden;
   height:100vh;
   height:100dvh;
 }
-body::before {
-  content:'';
-  position:fixed; inset:0;
-  background-image:linear-gradient(var(--grid-line) 1px,transparent 1px),
-                   linear-gradient(90deg,var(--grid-line) 1px,transparent 1px);
-  background-size:28px 28px;
-  pointer-events:none;
-  z-index:0;
-}
+/* body::before = aurora (defined above in glass section) */
 .container {
   position:relative;
   z-index:1;
@@ -804,7 +797,8 @@ td { padding:10px 16px; vertical-align:middle; }
 /* ROW STATE */
 tr.row-done td { opacity:.4; }
 tr.row-done .task-name { text-decoration:line-through; }
-tr.row-partial .task-name { color:var(--accent2); }
+tr.row-partial .task-name { color:#ffd580; }
+body.white-glass tr.row-partial .task-name { color:#a06000; }
 
 /* SUBTOTAL ROW */
 .subtotal-row td { background:rgba(255,255,255,.02); border-top:1px dashed var(--border) !important; padding:8px 16px; }
