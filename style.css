@@ -137,23 +137,28 @@ body.white-glass .color-radio:checked + .color-swatch { border-color:#000; }
 body.white-glass #loading-overlay { background:rgba(200,220,240,.88) !important; backdrop-filter:blur(20px); }
 body.white-glass .user-role-select { background:rgba(255,255,255,.5); color:var(--text); border-color:rgba(29,110,245,.2); }
 body.white-glass .btn-cancel { background:rgba(255,255,255,.5); color:var(--muted); }
-/* Ensure all text is dark and readable in white-glass */
-body.white-glass .task-name        { color:#0f1623; }
-body.white-glass .num              { color:#1e2330; }
-body.white-glass .num.days         { color:#1d6ef5; }
-body.white-glass .num.people       { color:#5a6880; }
-body.white-glass .total-cell       { color:#c07000; }
+/* White-glass: all text black/dark for readability */
+body.white-glass .task-name,
+body.white-glass .card-task-name   { color:#0f1623; }
+body.white-glass .num,
+body.white-glass .num.days,
+body.white-glass .num.people       { color:#0f1623; }
+body.white-glass .total-cell       { color:#0f1623; }
 body.white-glass .subtotal-remaining { color:#c0392b; }
-body.white-glass .subtotal-label   { color:#5a6880; }
-body.white-glass .subtotal-val     { color:inherit; }
-body.white-glass .notes-title      { color:#5a6880; }
-body.white-glass .note-item        { color:#1e2330; }
-body.white-glass .side-menu-label  { color:#5a6880; }
-body.white-glass .pill-label       { color:#5a6880; }
-body.white-glass .loading-status   { color:#5a6880; }
-body.white-glass .loading-title    { color:#0f1623; }
-body.white-glass th                { color:#5a6880; }
-body.white-glass td                { color:#1e2330; }
+body.white-glass .subtotal-label,
+body.white-glass .subtotal-val     { color:#0f1623; }
+body.white-glass .card-task-meta   { color:#5a6880; }
+body.white-glass .card-task-name b,
+body.white-glass .card-task-meta b { color:#0f1623; }
+body.white-glass .notes-title,
+body.white-glass .note-item,
+body.white-glass .side-menu-label,
+body.white-glass .pill-label,
+body.white-glass .loading-status,
+body.white-glass .loading-title,
+body.white-glass th,
+body.white-glass td                { color:#0f1623; }
+body.white-glass tr.row-partial .task-name { color:#a06000; }
 
 /* Glass Dark vars are now in :root */
 
@@ -384,7 +389,7 @@ body.glass .group-header-inner { backdrop-filter:blur(8px); -webkit-backdrop-fil
 .card-task-name {
   font-size:13px;
   font-weight:400;
-  color:var(--text);
+  color:#f0f4ff;
   line-height:1.3;
   flex:1;
   min-width:0;
@@ -432,7 +437,7 @@ body.glass .group-header-inner { backdrop-filter:blur(8px); -webkit-backdrop-fil
   gap:10px;
   font-family:'DM Mono',monospace;
   font-size:10px;
-  color:var(--muted);
+  color:rgba(200,215,255,.6);
 }
 .card-task-meta span b { color:var(--text); font-weight:500; }
 /* card-task-actions removed — icons now in card-task-header */
@@ -764,7 +769,7 @@ td { padding:10px 16px; vertical-align:middle; }
 .task-row:hover .row-actions { opacity:1; }
 .task-row.collapsed-row { display:none; }
 .task-name-cell { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-.task-name { font-weight:400; color:var(--text); line-height:1.3; transition:color .2s; flex:1; min-width:0; }
+.task-name { font-weight:400; color:#f0f4ff; line-height:1.3; flex:1; min-width:0; }
 .row-actions { display:flex; gap:3px; opacity:0; transition:opacity .15s; flex-shrink:0; }
 
 /* PRIORITY BADGE */
@@ -778,10 +783,10 @@ td { padding:10px 16px; vertical-align:middle; }
 .due-badge.overdue  { color:#f87171; border-color:rgba(248,113,113,.3); background:rgba(248,113,113,.08); }
 .due-badge.due-soon { color:#fbbf24; border-color:rgba(251,191,36,.3);  background:rgba(251,191,36,.07); }
 
-.num { font-family:'DM Mono',monospace; font-size:13px; text-align:right; white-space:nowrap; }
-.num.days   { color:var(--accent); }
-.num.people { color:#a8b2cc; }
-.total-cell { font-family:'DM Mono',monospace; font-size:13px; font-weight:500; text-align:right; color:var(--accent2); white-space:nowrap; }
+.num { font-family:'DM Mono',monospace; font-size:13px; text-align:right; white-space:nowrap; color:#f0f4ff; }
+.num.days   { color:#f0f4ff; }
+.num.people { color:rgba(240,244,255,.6); }
+.total-cell { font-family:'DM Mono',monospace; font-size:13px; font-weight:500; text-align:right; color:#f0f4ff; white-space:nowrap; }
 .bar-cell { width:80px; padding-right:14px; }
 .bar-bg { height:4px; border-radius:2px; background:var(--border); overflow:hidden; }
 .bar-fill { height:100%; border-radius:2px; opacity:.7; }
@@ -798,8 +803,7 @@ td { padding:10px 16px; vertical-align:middle; }
 
 /* ROW STATE */
 tr.row-done td { opacity:.4; }
-tr.row-done .task-name { text-decoration:line-through; color:var(--muted); }
-tr.row-done .total-cell, tr.row-done .num.days { color:var(--muted); }
+tr.row-done .task-name { text-decoration:line-through; }
 tr.row-partial .task-name { color:var(--accent2); }
 
 /* SUBTOTAL ROW */
