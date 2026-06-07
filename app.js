@@ -122,6 +122,7 @@ function render() {
   });
   updatePills();
   renderCardList();
+  if (typeof initDragAndDrop === 'function') initDragAndDrop();
 }
 
 function renderGroupHeader(tbody, group, c) {
@@ -604,6 +605,7 @@ function renderCardList() {
     // Group wrapper
     var groupEl = document.createElement('div');
     groupEl.className = 'card-group';
+    groupEl.dataset.gid = group.id;
 
     // Group header
     var { total, remaining } = groupTotals(group);
@@ -1071,3 +1073,233 @@ function deleteTrasferta(id) {
 }
 
 
+
+// ─────────────────────────────────────────────
+// GROUP DRAG TO REORDER
+// ─────────────────────────────────────────────
+(function() {
+  var dragSrcId   = null;   // gid being dragged
+  var ghost       = null;   // floating ghost element
+  var longPressTimer = null;
+  var touchDragging  = false;
+  var touchStartY    = 0;
+  var touchStartX    = 0;
+  var LONG_PRESS_MS  = 500;
+
+  // ── Utility: get group header rows in DOM order ────────────────
+  function getHeaderRows() {
+    return Array.from(document.querySelectorAll('.group-header-row[data-group-id]'))
+      .filter(function(r) { return !r.classList.contains('print-hide'); });
+  }
+
+  // ── Commit new order to appData + Firebase ─────────────────────
+  function commitOrder(newOrder) {
+    // newOrder: array of gids in new order
+    var grouped = {};
+    appData.groups.forEach(function(g) { grouped[g.id] = g; });
+    appData.groups = newOrder.map(function(gid, idx) {
+      var g = grouped[gid];
+      if (g) g.order = idx;
+      return g;
+    }).filter(Boolean);
+
+    // Persist each group meta
+    appData.groups.forEach(function(g) {
+      if (typeof dbSaveGroupMeta === 'function') dbSaveGroupMeta(g);
+    });
+    render();
+  }
+
+  // ── Create a ghost element that follows pointer ────────────────
+  function createGhost(headerRow, x, y) {
+    var inner = headerRow.querySelector('.group-header-inner');
+    ghost = document.createElement('div');
+    ghost.className = 'drag-ghost';
+    ghost.textContent = inner ? (inner.querySelector('.group-label') || inner).textContent.trim() : '…';
+    ghost.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;left:' + x + 'px;top:' + y + 'px;transform:translate(-50%,-50%)';
+    document.body.appendChild(ghost);
+  }
+
+  function moveGhost(x, y) {
+    if (!ghost) return;
+    ghost.style.left = x + 'px';
+    ghost.style.top  = y + 'px';
+  }
+
+  function removeGhost() {
+    if (ghost) { ghost.remove(); ghost = null; }
+  }
+
+  // ── Find which group header the pointer is over ────────────────
+  function groupIdAtPoint(x, y) {
+    // Temporarily hide ghost so elementFromPoint works
+    if (ghost) ghost.style.display = 'none';
+    var el = document.elementFromPoint(x, y);
+    if (ghost) ghost.style.display = '';
+    if (!el) return null;
+    var row = el.closest('.group-header-row, .card-group');
+    return row ? (row.dataset.groupId || row.dataset.gid || null) : null;
+  }
+
+  // ── DESKTOP DRAG & DROP ────────────────────────────────────────
+  function initDesktopDrag(row) {
+    var gid = row.dataset.groupId;
+    row.setAttribute('draggable', 'true');
+
+    row.addEventListener('dragstart', function(e) {
+      dragSrcId = gid;
+      row.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', gid);
+      // Use the group label as drag image text
+      var inner = row.querySelector('.group-label');
+      if (inner && e.dataTransfer.setDragImage) {
+        var img = document.createElement('div');
+        img.className = 'drag-ghost';
+        img.textContent = inner.textContent.trim();
+        img.style.cssText = 'position:absolute;left:-9999px;top:-9999px';
+        document.body.appendChild(img);
+        e.dataTransfer.setDragImage(img, 60, 20);
+        setTimeout(function() { img.remove(); }, 0);
+      }
+    });
+
+    row.addEventListener('dragend', function() {
+      row.classList.remove('dragging');
+      document.querySelectorAll('.drag-over').forEach(function(r) { r.classList.remove('drag-over'); });
+      dragSrcId = null;
+    });
+
+    row.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      document.querySelectorAll('.drag-over').forEach(function(r) { r.classList.remove('drag-over'); });
+      if (gid !== dragSrcId) row.classList.add('drag-over');
+    });
+
+    row.addEventListener('dragleave', function() {
+      row.classList.remove('drag-over');
+    });
+
+    row.addEventListener('drop', function(e) {
+      e.preventDefault();
+      row.classList.remove('drag-over');
+      var srcId = e.dataTransfer.getData('text/plain') || dragSrcId;
+      if (!srcId || srcId === gid) return;
+      var headers = getHeaderRows();
+      var order   = headers.map(function(r) { return r.dataset.groupId; });
+      var fromIdx = order.indexOf(srcId);
+      var toIdx   = order.indexOf(gid);
+      if (fromIdx === -1 || toIdx === -1) return;
+      order.splice(fromIdx, 1);
+      order.splice(toIdx, 0, srcId);
+      commitOrder(order);
+    });
+  }
+
+  // ── MOBILE LONG PRESS + TOUCH DRAG ────────────────────────────
+  function initTouchDrag(row) {
+    var gid = row.dataset.groupId;
+
+    row.addEventListener('touchstart', function(e) {
+      var touch = e.touches[0];
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+
+      longPressTimer = setTimeout(function() {
+        touchDragging = true;
+        dragSrcId = gid;
+        row.classList.add('dragging');
+        createGhost(row, touchStartX, touchStartY);
+        // Haptic feedback if available
+        if (navigator.vibrate) navigator.vibrate(40);
+      }, LONG_PRESS_MS);
+    }, { passive: true });
+
+    row.addEventListener('touchmove', function(e) {
+      var touch = e.touches[0];
+      // Cancel long press if finger moved too far before threshold
+      if (!touchDragging) {
+        var dx = Math.abs(touch.clientX - touchStartX);
+        var dy = Math.abs(touch.clientY - touchStartY);
+        if (dx > 8 || dy > 8) { clearTimeout(longPressTimer); }
+        return;
+      }
+      e.preventDefault(); // prevent scroll while dragging
+      moveGhost(touch.clientX, touch.clientY);
+
+      // Highlight target row
+      var overId = groupIdAtPoint(touch.clientX, touch.clientY);
+      document.querySelectorAll('.drag-over').forEach(function(r) { r.classList.remove('drag-over'); });
+      if (overId && overId !== gid) {
+        var targetRow = document.querySelector('[data-group-id="' + overId + '"]');
+        if (targetRow) targetRow.classList.add('drag-over');
+      }
+    }, { passive: false });
+
+    row.addEventListener('touchend', function(e) {
+      clearTimeout(longPressTimer);
+      if (!touchDragging) return;
+
+      var touch = e.changedTouches[0];
+      var overId = groupIdAtPoint(touch.clientX, touch.clientY);
+
+      removeGhost();
+      row.classList.remove('dragging');
+      document.querySelectorAll('.drag-over').forEach(function(r) { r.classList.remove('drag-over'); });
+      touchDragging = false;
+
+      if (overId && overId !== gid) {
+        var headers = getHeaderRows();
+        var order   = headers.map(function(r) { return r.dataset.groupId; });
+        var fromIdx = order.indexOf(gid);
+        var toIdx   = order.indexOf(overId);
+        if (fromIdx !== -1 && toIdx !== -1) {
+          order.splice(fromIdx, 1);
+          order.splice(toIdx, 0, gid);
+          commitOrder(order);
+        }
+      }
+      dragSrcId = null;
+    }, { passive: true });
+
+    row.addEventListener('touchcancel', function() {
+      clearTimeout(longPressTimer);
+      removeGhost();
+      row.classList.remove('dragging');
+      document.querySelectorAll('.drag-over').forEach(function(r) { r.classList.remove('drag-over'); });
+      touchDragging = false;
+      dragSrcId = null;
+    }, { passive: true });
+  }
+
+  // ── CARD VIEW: same logic on card group headers ────────────────
+  function initCardDrag(cardGroupEl, gid) {
+    var header = cardGroupEl.querySelector('.card-group-header');
+    if (!header) return;
+    // Store gid on header for groupIdAtPoint to find
+    header.dataset.groupId = gid;
+
+    initDesktopDrag(header);
+    initTouchDrag(header);
+  }
+
+  // ── PUBLIC: called after each render ──────────────────────────
+  window.initDragAndDrop = function() {
+    // Table view
+    document.querySelectorAll('.group-header-row[data-group-id]').forEach(function(row) {
+      // Only init once (check for draggable attr)
+      if (!row.getAttribute('draggable')) {
+        initDesktopDrag(row);
+        initTouchDrag(row);
+      }
+    });
+    // Card view
+    document.querySelectorAll('#card-list-container .card-group[data-gid]').forEach(function(el) {
+      if (!el.dataset.dragInit) {
+        el.dataset.dragInit = '1';
+        initCardDrag(el, el.dataset.gid);
+      }
+    });
+  };
+})();
