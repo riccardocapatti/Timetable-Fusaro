@@ -216,7 +216,7 @@ function renderSubtotalRow(tbody, group, c) {
   const tr = document.createElement('tr');
   tr.className = 'subtotal-row' + (group.collapsed ? ' collapsed-row' : '');
   tr.innerHTML = `
-    <td colspan="2" class="subtotal-remaining"><span>rimanenti &nbsp;</span>${fmtNum(remaining)} G·U</td>
+    <td colspan="2" class="subtotal-remaining"><span>rimanenti &nbsp;</span>${fmtNum(remaining)} Ore</td>
     <td colspan="2" class="subtotal-label">Totale ${escHtml(group.label)}</td>
     <td class="subtotal-val" colspan="2" style="text-align:right;color:${c.color}">${fmtNum(total)}</td>`;
   tbody.appendChild(tr);
@@ -282,7 +282,7 @@ document.getElementById('modal-body').addEventListener('keydown', e => {
 });
 
 // ─────────────────────────────────────────────
-// LIVE G·U CALC IN MODAL
+// LIVE Ore CALC IN MODAL
 // ─────────────────────────────────────────────
 function attachGuCalc() {
   const di = document.querySelector('#modal-body [data-field="days"]');
@@ -425,7 +425,7 @@ function taskModalBody(t) {
         <input class="field-input" data-field="people" type="number" min="1" value="${people}" />
       </div>
       <div class="field-group">
-        <label class="field-label">G·U (auto)</label>
+        <label class="field-label">Ore totali (auto)</label>
         <input class="field-input" data-field="gu" readonly placeholder="—" />
       </div>
     </div>
@@ -646,7 +646,7 @@ function renderCardList() {
     var subtotalEl = document.createElement('div');
     subtotalEl.className = 'card-group-subtotal';
     subtotalEl.innerHTML =
-      '<span class="subtotal-remaining-text">rimanenti ' + fmtNum(remaining) + ' O·U</span>' +
+      '<span class="subtotal-remaining-text">rimanenti ' + fmtNum(remaining) + ' Ore</span>' +
       '<span class="subtotal-total-text">totale ' + fmtNum(total) + '</span>';
     groupEl.appendChild(subtotalEl);
 
@@ -701,7 +701,7 @@ function renderCardList() {
           '<div class="card-task-meta">' +
             '<span><b>' + (isNaN(parseNum(task.days)) ? '—' : fmtNum(parseNum(task.days))) + '</b> h</span>' +
             '<span><b>×' + task.people + '</b> pers.</span>' +
-            '<span><b>' + fmtNum(gu) + '</b> G·U</span>' +
+            '<span><b>' + fmtNum(gu) + '</b> Ore</span>' +
           '</div>';
 
         // Wire status icon
