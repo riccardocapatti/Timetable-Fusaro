@@ -220,7 +220,7 @@ function renderAddTaskRow(tbody, group, c) {
 }
 
 function renderSubtotalRow(tbody, group, c) {
-  const { total, remaining } = groupTotals(group);
+  const { total, remaining, pct } = groupTotals(group);
   const tr = document.createElement('tr');
   tr.className = 'subtotal-row' + (group.collapsed ? ' collapsed-row' : '');
   tr.innerHTML = `
@@ -230,7 +230,7 @@ function renderSubtotalRow(tbody, group, c) {
       <span>${fmtNum(remaining)} Ore rimanenti</span>
     </td>
     <td colspan="2" class="subtotal-label">Totale ${escHtml(group.label)}</td>
-    <td class="subtotal-val" colspan="2" style="text-align:right;color:${c.color}">${fmtNum(total)}</td>`;
+    <td class="subtotal-val" colspan="2">${fmtNum(total)} Ore</td>`;
   tbody.appendChild(tr);
 }
 
@@ -620,7 +620,7 @@ function renderCardList() {
     groupEl.dataset.gid = group.id;
 
     // Group header
-    var { total, remaining } = groupTotals(group);
+    var { total, remaining, pct } = groupTotals(group);
     var headerEl = document.createElement('div');
     headerEl.className = 'card-group-header';
     headerEl.style.background = groupBg(c.color);
