@@ -5,6 +5,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+html { min-height:100%; }
 
 /* ── DARK THEME (default) ── */
 :root {
@@ -69,7 +70,7 @@ body.light .topbar { background:var(--bg); border-color:#b8c4d4; }
 
 /* ── GLASS THEME (Glassmorphism) ── */
 body.glass {
-  --bg:transparent;
+  --bg:#080c23;  /* solid fallback — shown when scrolled past aurora */
   --surface:rgba(255,255,255,.07);
   --border:rgba(255,255,255,.15);
   --accent:#7eb3ff;
@@ -89,17 +90,20 @@ body.glass {
 /* Aurora background — glass needs depth to blur through */
 body.glass::before {
   content:'';
+  /* Fixed covers viewport; body bg covers scroll overflow */
   position:fixed; inset:0;
   background:
     radial-gradient(ellipse at 20% 20%, rgba(100,60,220,.55) 0%, transparent 55%),
     radial-gradient(ellipse at 80% 10%, rgba(40,120,255,.45) 0%, transparent 50%),
     radial-gradient(ellipse at 60% 80%, rgba(20,200,180,.35) 0%, transparent 50%),
     radial-gradient(ellipse at 10% 75%, rgba(180,40,220,.3)  0%, transparent 50%),
-    linear-gradient(135deg, #0a0a1a 0%, #0d1535 50%, #0a1a2a 100%);
+    linear-gradient(135deg, #080c23 0%, #0d1535 50%, #0a1a2a 100%);
   z-index:0;
   pointer-events:none;
   animation:auroraShift 18s ease-in-out infinite alternate;
 }
+/* Solid bg on html ensures no white gap when overscrolling on iOS */
+body.glass { background-color:#080c23; }
 @keyframes auroraShift {
   0%   { filter:hue-rotate(0deg)   brightness(1); }
   50%  { filter:hue-rotate(20deg)  brightness(1.08); }

@@ -565,6 +565,7 @@ function renderCardList() {
         '<div class="card-group-actions" style="display:flex;gap:6px">' +
           '<button class="icon-btn" data-action="assign-group" data-group="' + group.id + '" title="Assegna gruppo">👤</button>' +
           '<button class="icon-btn" data-action="rename-group" data-group="' + group.id + '" title="Rinomina">✎</button>' +
+          '<button class="icon-btn clone" data-action="clone-group"  data-group="' + group.id + '" title="Clona gruppo">⧉</button>' +
           '<button class="icon-btn danger" data-action="delete-group" data-group="' + group.id + '" title="Elimina">✕</button>' +
         '</div>' : '');
     headerEl.querySelector('.card-group-label').addEventListener('click', function() {
@@ -576,6 +577,7 @@ function renderCardList() {
         var action = this.dataset.action;
         var gid    = this.dataset.group;
         if (action === 'rename-group') renameGroup(gid);
+        if (action === 'clone-group')  cloneGroup(gid);
         if (action === 'delete-group') deleteGroup(gid);
         if (action === 'assign-group') assignGroup(gid);
       });
@@ -720,6 +722,8 @@ function applyTheme(theme) {
   if (theme === 'light')  document.body.classList.add('light');
   if (theme === 'mobile') document.body.classList.add('mobile');
   if (theme === 'glass')  document.body.classList.add('glass');
+  // Set html background to prevent iOS overscroll white flash
+  document.documentElement.style.background = (theme === 'glass') ? '#080c23' : '';
   localStorage.setItem('fusaro_theme', theme);
   document.querySelectorAll('.theme-opt').forEach(function(btn) {
     btn.classList.toggle('active', btn.dataset.theme === theme);
