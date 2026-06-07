@@ -310,8 +310,11 @@ body.white-glass .bar-bg { background:rgba(0,0,0,.1); }
 .subtotal-row.collapsed-row { display:none; }
 .subtotal-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.15em; text-transform:uppercase; color:var(--muted); text-align:right; }
 .subtotal-val   { font-family:'DM Mono',monospace; font-size:14px; font-weight:500; text-align:right; color:#f0f4ff; }
-.subtotal-remaining { font-family:'DM Mono',monospace; font-size:10px; color:var(--danger); }
-.subtotal-remaining span { color:var(--muted); font-size:9px; }
+.subtotal-remaining { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+.subtotal-pct     { font-family:'DM Mono',monospace; font-size:12px; font-weight:600; color:#52d9a0; }
+.subtotal-divider { color:var(--muted); opacity:.5; }
+body.white-glass .subtotal-pct { color:#005a28; }
+body.white-glass .subtotal-val { color:#0f1623; }
 body.white-glass .subtotal-row td { background:rgba(255,255,255,.3); }
 body.white-glass .subtotal-val    { color:#0f1623; }
 body.white-glass .subtotal-label  { color:var(--muted); }

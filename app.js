@@ -75,12 +75,20 @@ function computeGU(days, people) {
 function guToBarWidth(gu) { return isNaN(gu) ? 2 : Math.min(100, Math.round((gu/18)*100)); }
 
 function groupTotals(group) {
-  let total=0, remaining=0;
+  let total=0, done=0, partial=0;
   group.tasks.forEach(t => {
     const gu = computeGU(t.days, t.people);
-    if (!isNaN(gu)) { total += gu; if (t.status !== 'done') remaining += gu; }
+    if (!isNaN(gu)) {
+      total   += gu;
+      if (t.status === 'done')    done    += gu;
+      if (t.status === 'partial') partial += gu;
+    }
   });
-  return { total, remaining };
+  // partial counts as 50% complete
+  const completedValue = done + (partial * 0.5);
+  const pct     = total > 0 ? Math.round((completedValue / total) * 100) : 0;
+  const remaining = total - completedValue;
+  return { total, remaining, pct };
 }
 
 function findGroup(gid) { return appData.groups.find(g=>g.id===gid); }
@@ -216,7 +224,11 @@ function renderSubtotalRow(tbody, group, c) {
   const tr = document.createElement('tr');
   tr.className = 'subtotal-row' + (group.collapsed ? ' collapsed-row' : '');
   tr.innerHTML = `
-    <td colspan="2" class="subtotal-remaining"><span>rimanenti &nbsp;</span>${fmtNum(remaining)} Ore</td>
+    <td colspan="2" class="subtotal-remaining">
+      <span class="subtotal-pct">${pct}%</span>
+      <span class="subtotal-divider">—</span>
+      <span>${fmtNum(remaining)} Ore rimanenti</span>
+    </td>
     <td colspan="2" class="subtotal-label">Totale ${escHtml(group.label)}</td>
     <td class="subtotal-val" colspan="2" style="text-align:right;color:${c.color}">${fmtNum(total)}</td>`;
   tbody.appendChild(tr);
@@ -646,8 +658,8 @@ function renderCardList() {
     var subtotalEl = document.createElement('div');
     subtotalEl.className = 'card-group-subtotal';
     subtotalEl.innerHTML =
-      '<span class="subtotal-remaining-text">rimanenti ' + fmtNum(remaining) + ' Ore</span>' +
-      '<span class="subtotal-total-text">totale ' + fmtNum(total) + '</span>';
+      '<span class="subtotal-remaining-text">' + pct + '% — ' + fmtNum(remaining) + ' Ore rim.</span>' +
+      '<span class="subtotal-total-text">' + fmtNum(total) + ' Ore tot.</span>';
     groupEl.appendChild(subtotalEl);
 
     if (!group.collapsed) {
