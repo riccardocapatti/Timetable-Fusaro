@@ -122,6 +122,10 @@ body.white-glass .add-group-btn:hover { background:rgba(29,110,245,.1); border-c
 body.white-glass #sync-bar        { background:rgba(255,255,255,.4); border-color:var(--glass-border); }
 body.white-glass .signout-btn     { border-color:rgba(29,110,245,.25); color:var(--muted); }
 body.white-glass .card-task       { background:rgba(255,255,255,.4); backdrop-filter:var(--glass-blur); -webkit-backdrop-filter:var(--glass-blur); border:1px solid var(--glass-border); border-top:none; }
+body.white-glass .card-task-name  { color:#0f1623; }
+body.white-glass .card-task-meta  { color:#5a6880; }
+body.white-glass .card-group-subtotal { color:#5a6880; }
+body.white-glass .card-group-label    { color:inherit; }
 body.white-glass .card-group-header { backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); }
 body.white-glass .card-icon-btn   { background:rgba(255,255,255,.5); border-color:var(--glass-border); color:var(--muted); }
 body.white-glass .card-status-icon.status-done    { background:rgba(0,160,80,.1); border-color:rgba(0,160,80,.25); }
@@ -133,6 +137,23 @@ body.white-glass .color-radio:checked + .color-swatch { border-color:#000; }
 body.white-glass #loading-overlay { background:rgba(200,220,240,.88) !important; backdrop-filter:blur(20px); }
 body.white-glass .user-role-select { background:rgba(255,255,255,.5); color:var(--text); border-color:rgba(29,110,245,.2); }
 body.white-glass .btn-cancel { background:rgba(255,255,255,.5); color:var(--muted); }
+/* Ensure all text is dark and readable in white-glass */
+body.white-glass .task-name        { color:#0f1623; }
+body.white-glass .num              { color:#1e2330; }
+body.white-glass .num.days         { color:#1d6ef5; }
+body.white-glass .num.people       { color:#5a6880; }
+body.white-glass .total-cell       { color:#c07000; }
+body.white-glass .subtotal-remaining { color:#c0392b; }
+body.white-glass .subtotal-label   { color:#5a6880; }
+body.white-glass .subtotal-val     { color:inherit; }
+body.white-glass .notes-title      { color:#5a6880; }
+body.white-glass .note-item        { color:#1e2330; }
+body.white-glass .side-menu-label  { color:#5a6880; }
+body.white-glass .pill-label       { color:#5a6880; }
+body.white-glass .loading-status   { color:#5a6880; }
+body.white-glass .loading-title    { color:#0f1623; }
+body.white-glass th                { color:#5a6880; }
+body.white-glass td                { color:#1e2330; }
 
 /* Glass Dark vars are now in :root */
 
