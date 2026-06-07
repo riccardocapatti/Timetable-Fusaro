@@ -4,15 +4,28 @@
 const STORAGE_KEY = 'fusaro_v4';
 
 const GROUP_COLORS = [
-  { name:'blue',   bg:'#1a2840', color:'#5fa8ff' },
-  { name:'green',  bg:'#1a2830', color:'#52d9a0' },
-  { name:'purple', bg:'#251f38', color:'#c084fc' },
-  { name:'amber',  bg:'#2a1f10', color:'#fbbf24' },
-  { name:'rose',   bg:'#2a1520', color:'#fb7185' },
-  { name:'cyan',   bg:'#0f2530', color:'#22d3ee' },
-  { name:'lime',   bg:'#182510', color:'#a3e635' },
-  { name:'orange', bg:'#2a1a08', color:'#fb923c' },
+  { name:'blue',   color:'#5fa8ff' },
+  { name:'green',  color:'#52d9a0' },
+  { name:'purple', color:'#c084fc' },
+  { name:'amber',  color:'#fbbf24' },
+  { name:'rose',   color:'#fb7185' },
+  { name:'cyan',   color:'#22d3ee' },
+  { name:'lime',   color:'#a3e635' },
+  { name:'orange', color:'#fb923c' },
 ];
+
+// Generate group header background from color — works on both dark and light glass
+function groupBg(color) {
+  // Use rgba tint of the accent color — adapts to whatever is behind it
+  return 'rgba(' + hexToRgb(color) + ',.12)';
+}
+
+function hexToRgb(hex) {
+  var r = parseInt(hex.slice(1,3),16);
+  var g = parseInt(hex.slice(3,5),16);
+  var b = parseInt(hex.slice(5,7),16);
+  return r + ',' + g + ',' + b;
+}
 
 const LABELS  = { none:'–', partial:'In corso', done:'Completato' };
 const CYCLE   = { none:'partial', partial:'done', done:'none' };
@@ -129,7 +142,7 @@ function renderGroupHeader(tbody, group, c) {
 
   tr.innerHTML = `
     <td colspan="6">
-      <div class="group-header-inner" style="background:${c.bg}">
+      <div class="group-header-inner" style="background:'+groupBg(c.color)+'">
         <span class="group-label" style="color:${c.color}" data-action="toggle-group" data-group="${group.id}">
           <span class="collapse-icon">▸</span> ${escHtml(group.label)}${groupAssignBadge}
         </span>
@@ -188,7 +201,7 @@ function renderAddTaskRow(tbody, group, c) {
   tr.className = 'add-task-row' + (group.collapsed ? ' collapsed-row' : '');
   tr.innerHTML = `
     <td colspan="6">
-      <div class="add-task-inner" style="background:${c.bg}22">
+      <div class="add-task-inner" style="background:${groupBg(c.color)}">
         <button class="add-task-btn" data-action="add-task" data-group="${group.id}" style="color:${c.color}88">
           <span style="font-size:14px;line-height:1">+</span> Aggiungi attività
         </button>
@@ -596,7 +609,7 @@ function renderCardList() {
     var { total, remaining } = groupTotals(group);
     var headerEl = document.createElement('div');
     headerEl.className = 'card-group-header';
-    headerEl.style.background = c.bg;
+    headerEl.style.background = groupBg(c.color);
     headerEl.innerHTML =
       '<span class="card-group-label" style="color:' + c.color + '">' +
         '<span class="collapse-icon"' + (group.collapsed ? ' style="transform:rotate(-90deg)"' : '') + '>▸</span>' +
@@ -630,7 +643,7 @@ function renderCardList() {
     // Subtotal bar
     var subtotalEl = document.createElement('div');
     subtotalEl.className = 'card-group-subtotal';
-    subtotalEl.style.background = c.bg + '88';
+    subtotalEl.style.background = groupBg(c.color);
     subtotalEl.innerHTML =
       '<span style="color:var(--danger);font-size:10px">rimanenti ' + fmtNum(remaining) + ' G·U</span>' +
       '<span style="color:' + c.color + '">totale ' + fmtNum(total) + '</span>';
