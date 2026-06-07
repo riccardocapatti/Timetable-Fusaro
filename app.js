@@ -304,8 +304,10 @@ async function addGroup() {
   const result = await openModal('Nuovo Gruppo', groupModalBody(), 'Aggiungi');
   attachSwatches();
   if (!result?.label) return;
-  appData.groups.push({ id:uid(), label:result.label, colorIdx:result.colorIdx??0, collapsed:false, tasks:[] });
-  saveData(); render();
+  var newGroup = { id:uid(), label:result.label, colorIdx:result.colorIdx??0, collapsed:false, order:appData.groups.length, tasks:[] };
+  appData.groups.push(newGroup);
+  if (typeof dbSaveGroupMeta === 'function') dbSaveGroupMeta(newGroup);
+  render();
 }
 
 async function renameGroup(gid) {
@@ -324,28 +326,45 @@ async function cloneGroup(gid) {
   const result = await openModal('Clona Gruppo', groupModalBody(g.label+' (copia)', nextColor), 'Clona');
   attachSwatches();
   if (!result?.label) return;
+
+  const idx      = appData.groups.findIndex(x=>x.id===gid);
   const newGroup = {
-    id:uid(), label:result.label,
+    id:       uid(),
+    label:    result.label,
     colorIdx: result.colorIdx ?? nextColor,
-    collapsed: false,
-    tasks: g.tasks.map(t => ({ ...t, id:uid(), status:'none' }))
+    collapsed:false,
+    order:    idx + 1,
+    tasks:    g.tasks.map(function(t) {
+      return Object.assign({}, t, { id:uid(), status:'none', assignedTo:null, updatedBy:'', updatedAt:0 });
+    })
   };
-  const idx = appData.groups.findIndex(x=>x.id===gid);
+
   appData.groups.splice(idx+1, 0, newGroup);
-  saveData(); render();
+
+  // Write to Firebase v2
+  if (typeof dbSaveGroupMeta === 'function') {
+    dbSaveGroupMeta(newGroup);
+    newGroup.tasks.forEach(function(t) {
+      dbSaveTask(newGroup.id, t);
+    });
+  }
+  render();
 }
 
 function deleteGroup(gid) {
   if (!confirm('Eliminare questo gruppo e tutte le sue attività?')) return;
-  appData.groups = appData.groups.filter(g=>g.id!==gid);
-  if (typeof dbDeleteGroup === 'function') { dbDeleteGroup(gid); } else { saveData(); }
-  render();
+  appData.groups = appData.groups.filter(function(g){ return g.id !== gid; });
+  render(); // optimistic local removal
+  if (typeof dbDeleteGroup === 'function') {
+    dbDeleteGroup(gid); // Firebase will confirm via subscription
+  }
 }
 
 function toggleGroup(gid) {
-  const g = findGroup(gid); if (!g) return;
+  var g = findGroup(gid); if (!g) return;
   g.collapsed = !g.collapsed;
-  saveData(); render();
+  if (typeof dbSaveGroupMeta === 'function') dbSaveGroupMeta(g);
+  render();
 }
 
 // ─────────────────────────────────────────────
@@ -445,9 +464,12 @@ function deleteTask(gid, tid) {
 }
 
 function cycleStatus(gid, tid) {
-  const task = findTask(gid, tid); if (!task) return;
+  // NOTE: firebase.js overrides this function with a version that
+  // checks permissions and calls dbSetTaskStatus. This is the fallback.
+  var task = findTask(gid, tid); if (!task) return;
   task.status = CYCLE[task.status] || 'none';
-  saveData(); render();
+  if (typeof dbSetTaskStatus === 'function') dbSetTaskStatus(gid, tid, task.status);
+  render();
 }
 
 // ─────────────────────────────────────────────
@@ -923,8 +945,10 @@ async function addTrasferta() {
   const r = await openModal('Nuova Trasferta', trasfertaBody(null), 'Aggiungi');
   if (!r?.luogo) return;
   if (!appData.trasferte) appData.trasferte = [];
-  appData.trasferte.push({ id:uid(), giorni:r.giorni||'1', luogo:r.luogo });
-  saveData(); renderTrasferte();
+  var t = { id:uid(), giorni:r.giorni||'1', luogo:r.luogo };
+  appData.trasferte.push(t);
+  if (typeof dbSaveTrasferta === 'function') dbSaveTrasferta(t); else saveData();
+  renderTrasferte();
 }
 
 async function editTrasferta(id) {
@@ -932,13 +956,15 @@ async function editTrasferta(id) {
   const r = await openModal('Modifica Trasferta', trasfertaBody(t));
   if (!r?.luogo) return;
   t.giorni = r.giorni||'1'; t.luogo = r.luogo;
-  saveData(); renderTrasferte();
+  if (typeof dbSaveTrasferta === 'function') dbSaveTrasferta(t); else saveData();
+  renderTrasferte();
 }
 
 function deleteTrasferta(id) {
   if (!confirm('Eliminare questa trasferta?')) return;
-  appData.trasferte = (appData.trasferte||[]).filter(t=>t.id!==id);
-  saveData(); renderTrasferte();
+  appData.trasferte = (appData.trasferte||[]).filter(function(t){ return t.id !== id; });
+  if (typeof dbDeleteTrasferta === 'function') dbDeleteTrasferta(id); else saveData();
+  renderTrasferte();
 }
 
 
