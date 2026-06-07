@@ -578,8 +578,8 @@ function renderCardList() {
   var container = document.getElementById('card-list-container');
   if (!container) return;
 
-  var isMobile = document.body.classList.contains('mobile') ||
-                 document.body.classList.contains('glass');
+  // Auto-responsive: show cards when screen ≤720px (matches CSS media query)
+  var isMobile = window.matchMedia('(max-width:720px)').matches;
   container.style.display = isMobile ? 'block' : 'none';
   if (!isMobile) return;
 
@@ -757,22 +757,22 @@ toggleDoneBtn && toggleDoneBtn.addEventListener('click', function() {
 // THEME
 // ─────────────────────────────────────────────
 var THEMES = ['dark','light','mobile'];
-var currentTheme = localStorage.getItem('fusaro_theme') || 'dark';
-
 function applyTheme(theme) {
   currentTheme = theme;
-  document.body.classList.remove('light','mobile','glass');
-  if (theme === 'light')  document.body.classList.add('light');
-  if (theme === 'mobile') document.body.classList.add('mobile');
-  if (theme === 'glass')  document.body.classList.add('glass');
-  // Set html background to prevent iOS overscroll white flash
-  document.documentElement.style.background = (theme === 'glass') ? '#080c23' : '';
+  // Only two themes: 'dark' (glass dark, default) and 'white-glass'
+  document.body.classList.remove('white-glass');
+  if (theme === 'white-glass') document.body.classList.add('white-glass');
+  // Set html/body background for iOS overscroll
+  document.documentElement.style.background = (theme === 'white-glass') ? '#c8d8ec' : '#080c23';
   localStorage.setItem('fusaro_theme', theme);
   document.querySelectorAll('.theme-opt').forEach(function(btn) {
     btn.classList.toggle('active', btn.dataset.theme === theme);
   });
   renderCardList();
 }
+
+var currentTheme = localStorage.getItem('fusaro_theme') || 'dark';
+applyTheme(currentTheme);
 
 document.querySelectorAll('.theme-opt').forEach(function(btn) {
   btn.addEventListener('click', function() {
