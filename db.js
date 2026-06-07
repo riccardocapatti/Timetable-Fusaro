@@ -31,7 +31,7 @@ function dbDeleteTask(groupId, taskId) {
 // ── GROUPS — write group metadata (not tasks) ─────────────────
 function dbSaveGroupMeta(group) {
   setSyncStatus("syncing", "Salvataggio\u2026");
-  var meta = { id: group.id, label: group.label, colorIdx: group.colorIdx, collapsed: group.collapsed, order: group.order || 0 };
+  var meta = { id: group.id, label: group.label, colorIdx: group.colorIdx, collapsed: group.collapsed || false, archived: group.archived || false, order: group.order || 0 };
   return dbRef("groups/" + group.id + "/meta")
     .set(meta)
     .then(function()  { setSyncStatus("synced", "Sincronizzato \u2713"); })
@@ -157,6 +157,7 @@ function normalizeDbData(raw) {
       label:     meta.label     || gid,
       colorIdx:  meta.colorIdx  || 0,
       collapsed: meta.collapsed || false,
+      archived:  meta.archived  || false,
       order:     meta.order     || 0,
       tasks:     taskArr
     });

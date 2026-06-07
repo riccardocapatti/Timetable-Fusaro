@@ -138,7 +138,9 @@ function renderGroupHeader(tbody, group, c) {
           <button class="icon-btn clone"  title="Assegna gruppo"       data-action="assign-group"  data-group="${group.id}">👤</button>
           <button class="icon-btn"        title="Rinomina / colore"    data-action="rename-group"  data-group="${group.id}">✎</button>
           <button class="icon-btn clone"  title="Clona gruppo"         data-action="clone-group"   data-group="${group.id}">⧉</button>
-          <button class="icon-btn danger" title="Elimina gruppo"       data-action="delete-group"  data-group="${group.id}">✕</button>
+          <button class="icon-btn" title="Archivia gruppo" data-action="archive-group" data-group="${group.id}">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><rect x="2" y="5" width="12" height="9" rx="1"/><path d="M1 3h14v3H1z"/><line x1="6" y1="9" x2="10" y2="9"/></svg>
+          </button>
         </div>
       </div>
     </td>`;
@@ -351,13 +353,29 @@ async function cloneGroup(gid) {
   render();
 }
 
+function archiveGroup(gid) {
+  var g = findGroup(gid); if (!g) return;
+  g.archived = true;
+  if (typeof dbSaveGroupMeta === 'function') dbSaveGroupMeta(g);
+  render();
+  renderArchivePanel(); // refresh archive if open
+}
+
+function unarchiveGroup(gid) {
+  var g = findGroup(gid); if (!g) return;
+  g.archived = false;
+  if (typeof dbSaveGroupMeta === 'function') dbSaveGroupMeta(g);
+  render();
+  renderArchivePanel();
+}
+
 function deleteGroup(gid) {
-  if (!confirm('Eliminare questo gruppo e tutte le sue attività?')) return;
+  // Permanent delete — only callable from archive panel
+  if (!confirm('Eliminare definitivamente questo gruppo e tutte le sue attività? Questa azione non è reversibile.')) return;
   appData.groups = appData.groups.filter(function(g){ return g.id !== gid; });
-  render(); // optimistic local removal
-  if (typeof dbDeleteGroup === 'function') {
-    dbDeleteGroup(gid); // Firebase will confirm via subscription
-  }
+  renderArchivePanel();
+  render();
+  if (typeof dbDeleteGroup === 'function') dbDeleteGroup(gid);
 }
 
 function toggleGroup(gid) {
@@ -528,6 +546,7 @@ document.getElementById('table-body').addEventListener('click', e => {
   if (action === 'toggle-group') { toggleGroup(gid); return; }
   if (action === 'export-group') { exportPdf(gid); return; }
   if (action === 'assign-group') { assignGroup(gid); return; }
+  if (action === 'archive-group') { archiveGroup(gid); return; }
 });
 
 document.getElementById('btn-add-group').addEventListener('click', addGroup);
@@ -566,7 +585,7 @@ function renderCardList() {
 
   container.innerHTML = '';
 
-  appData.groups.forEach(function(group) {
+  appData.groups.filter(function(g){ return !g.archived; }).forEach(function(group) {
     var c = GROUP_COLORS[group.colorIdx % GROUP_COLORS.length];
 
     // Group wrapper
@@ -588,7 +607,9 @@ function renderCardList() {
           '<button class="icon-btn" data-action="assign-group" data-group="' + group.id + '" title="Assegna gruppo">👤</button>' +
           '<button class="icon-btn" data-action="rename-group" data-group="' + group.id + '" title="Rinomina">✎</button>' +
           '<button class="icon-btn clone" data-action="clone-group"  data-group="' + group.id + '" title="Clona gruppo">⧉</button>' +
-          '<button class="icon-btn danger" data-action="delete-group" data-group="' + group.id + '" title="Elimina">✕</button>' +
+          '<button class="icon-btn" data-action="archive-group" data-group="' + group.id + '" title="Archivia gruppo">' +
+            '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="13" height="13"><rect x="2" y="5" width="12" height="9" rx="1"/><path d="M1 3h14v3H1z"/><line x1="6" y1="9" x2="10" y2="9"/></svg>' +
+          '</button>' +
         '</div>' : '');
     headerEl.querySelector('.card-group-label').addEventListener('click', function() {
       toggleGroup(group.id);
@@ -598,10 +619,10 @@ function renderCardList() {
         e.stopPropagation();
         var action = this.dataset.action;
         var gid    = this.dataset.group;
-        if (action === 'rename-group') renameGroup(gid);
-        if (action === 'clone-group')  cloneGroup(gid);
-        if (action === 'delete-group') deleteGroup(gid);
-        if (action === 'assign-group') assignGroup(gid);
+        if (action === 'rename-group')  renameGroup(gid);
+        if (action === 'clone-group')   cloneGroup(gid);
+        if (action === 'archive-group') archiveGroup(gid);
+        if (action === 'assign-group')  assignGroup(gid);
       });
     });
     groupEl.appendChild(headerEl);
@@ -893,6 +914,75 @@ async function assignGroup(gid) {
   await Promise.all(promises);
   render();
 }
+
+// ─────────────────────────────────────────────
+// ARCHIVE PANEL
+// ─────────────────────────────────────────────
+function openArchivePanel() {
+  var panel = document.getElementById('archive-panel');
+  if (panel) panel.style.display = 'flex';
+  renderArchivePanel();
+}
+
+function closeArchivePanel() {
+  var panel = document.getElementById('archive-panel');
+  if (panel) panel.style.display = 'none';
+}
+
+function renderArchivePanel() {
+  var list = document.getElementById('archive-list');
+  if (!list) return;
+
+  var archived = (appData.groups || []).filter(function(g){ return g.archived; });
+
+  if (archived.length === 0) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:8px 0">Nessun gruppo archiviato.</div>';
+    return;
+  }
+
+  list.innerHTML = archived.map(function(g) {
+    var c = GROUP_COLORS[g.colorIdx % GROUP_COLORS.length];
+    var taskCount = (g.tasks || []).length;
+    var doneCount = (g.tasks || []).filter(function(t){ return t.status === 'done'; }).length;
+    return '<div class="archive-item" data-gid="' + g.id + '">' +
+      '<div class="archive-item-header" style="border-left:3px solid ' + c.color + '">' +
+        '<div>' +
+          '<div class="archive-item-label">' + escHtml(g.label) + '</div>' +
+          '<div class="archive-item-meta">' + taskCount + ' attività &middot; ' + doneCount + ' completate</div>' +
+        '</div>' +
+        '<div style="display:flex;gap:8px;flex-shrink:0">' +
+          '<button class="btn-cancel" style="font-size:12px;padding:6px 12px" data-action="unarchive" data-gid="' + g.id + '">' +
+            '↩ Ripristina' +
+          '</button>' +
+          '<button class="btn-cancel" style="font-size:12px;padding:6px 12px;color:var(--danger);border-color:rgba(248,113,113,.3)" data-action="delete-perm" data-gid="' + g.id + '">' +
+            '✕ Elimina' +
+          '</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+
+  // Wire buttons
+  list.querySelectorAll('[data-action]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var gid    = this.dataset.gid;
+      var action = this.dataset.action;
+      if (action === 'unarchive')   unarchiveGroup(gid);
+      if (action === 'delete-perm') deleteGroup(gid);
+    });
+  });
+}
+
+// Wire archive panel open/close buttons (called after DOM ready)
+document.addEventListener('DOMContentLoaded', function() {
+  var closeBtn = document.getElementById('btn-close-archive-panel');
+  if (closeBtn) closeBtn.addEventListener('click', closeArchivePanel);
+
+  var panel = document.getElementById('archive-panel');
+  if (panel) panel.addEventListener('click', function(e) {
+    if (e.target === panel) closeArchivePanel();
+  });
+});
 
 // ─────────────────────────────────────────────
 // TRASFERTE

@@ -223,6 +223,13 @@ function initUserPanel() {
     openUserPanel();
   });
 
+  // Wire archive panel button
+  var archiveBtn = document.getElementById("btn-archive-panel");
+  archiveBtn && archiveBtn.addEventListener("click", function() {
+    if (typeof closeMenu === "function") closeMenu();
+    if (typeof openArchivePanel === "function") openArchivePanel();
+  });
+
   // Close panel
   var closeBtn = document.getElementById("btn-close-user-panel");
   closeBtn && closeBtn.addEventListener("click", closeUserPanel);
