@@ -49,9 +49,21 @@ body.white-glass {
 /* ══════════════════════════════════════════════════════════
    AURORA BACKGROUNDS
    ══════════════════════════════════════════════════════════ */
-body { background-color:#080c23; }
+html { background-color:#080c23; }  /* covers overscroll area */
+body { background-color:#080c23; background-attachment:fixed; }
+body.white-glass       { background-color:#c8d8ec; }
+html:has(body.white-glass) { background-color:#c8d8ec; }
 body::before {
-  content:''; position:fixed; inset:0; z-index:0; pointer-events:none;
+  content:'';
+  /* Fixed + GPU layer — never repaints when browser chrome shows/hides */
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  z-index:0; pointer-events:none;
+  /* Force GPU compositing — prevents repaint flash on scroll */
+  transform:translateZ(0);
+  -webkit-transform:translateZ(0);
+  will-change:transform;
   background:
     radial-gradient(ellipse at 20% 20%, rgba(100,60,220,.55)  0%, transparent 55%),
     radial-gradient(ellipse at 80% 10%, rgba(40,120,255,.45)  0%, transparent 50%),
@@ -82,7 +94,7 @@ body {
   color:#f0f4ff;
   font-family:'DM Sans',sans-serif;
   font-weight:300;
-  min-height:100vh;
+  min-height:100svh; /* svh = small viewport height — stable, ignores chrome */
   padding-top:calc(var(--topbar-h) + 20px);
   padding-left:24px; padding-right:24px; padding-bottom:48px;
   overflow-x:hidden;
@@ -110,6 +122,9 @@ body.is-loading { overflow:hidden; height:100dvh; }
   box-shadow:0 1px 0 rgba(255,255,255,.07);
   display:flex; align-items:center; justify-content:space-between;
   padding:0 16px; gap:8px; overflow:hidden;
+  /* GPU layer prevents flash when browser chrome retracts */
+  transform:translateZ(0);
+  -webkit-transform:translateZ(0);
 }
 body.white-glass .topbar {
   background:rgba(220,235,255,.6);
@@ -158,11 +173,16 @@ body.white-glass .menu-overlay { background:rgba(80,110,160,.2); }
   border-left:1px solid var(--glass-border);
   box-shadow:-8px 0 32px rgba(0,0,0,.4);
   display:flex; flex-direction:column; overflow-y:auto;
-  transform:translateX(100%); visibility:hidden; pointer-events:none;
+  transform:translateX(100%) translateZ(0);
+  -webkit-transform:translateX(100%) translateZ(0);
+  visibility:hidden; pointer-events:none;
   transition:transform .28s cubic-bezier(.4,0,.2,1), visibility 0s linear .28s;
+  will-change:transform;
 }
 body.menu-open .side-menu {
-  transform:translateX(0); visibility:visible; pointer-events:all;
+  transform:translateX(0) translateZ(0);
+  -webkit-transform:translateX(0) translateZ(0);
+  visibility:visible; pointer-events:all;
   transition:transform .28s cubic-bezier(.4,0,.2,1), visibility 0s linear 0s;
 }
 body.white-glass .side-menu { background:rgba(225,238,255,.85); border-left-color:var(--glass-border); }
