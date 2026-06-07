@@ -417,7 +417,7 @@ function taskModalBody(t) {
     </div>
     <div class="field-row">
       <div class="field-group">
-        <label class="field-label">Giorni</label>
+        <label class="field-label">Ore</label>
         <input class="field-input" data-field="days" placeholder="es. 1.5 o —" value="${days}" />
       </div>
       <div class="field-group">
@@ -645,10 +645,9 @@ function renderCardList() {
     // Subtotal bar
     var subtotalEl = document.createElement('div');
     subtotalEl.className = 'card-group-subtotal';
-    subtotalEl.style.background = groupBg(c.color);
     subtotalEl.innerHTML =
-      '<span style="color:var(--danger);font-size:10px">rimanenti ' + fmtNum(remaining) + ' G·U</span>' +
-      '<span style="color:' + c.color + '">totale ' + fmtNum(total) + '</span>';
+      '<span class="subtotal-remaining-text">rimanenti ' + fmtNum(remaining) + ' O·U</span>' +
+      '<span class="subtotal-total-text">totale ' + fmtNum(total) + '</span>';
     groupEl.appendChild(subtotalEl);
 
     if (!group.collapsed) {
@@ -700,7 +699,7 @@ function renderCardList() {
           '</div>' +
           (badges ? '<div class="card-task-badges">' + badges + '</div>' : '') +
           '<div class="card-task-meta">' +
-            '<span><b>' + (isNaN(parseNum(task.days)) ? '—' : fmtNum(parseNum(task.days))) + '</b> g</span>' +
+            '<span><b>' + (isNaN(parseNum(task.days)) ? '—' : fmtNum(parseNum(task.days))) + '</b> h</span>' +
             '<span><b>×' + task.people + '</b> pers.</span>' +
             '<span><b>' + fmtNum(gu) + '</b> G·U</span>' +
           '</div>';

@@ -509,8 +509,12 @@ body.white-glass #loading-overlay { background:rgba(200,220,240,.88); }
 .card-group-header:active { cursor:grabbing; }
 .card-group-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; font-weight:500; display:flex; align-items:center; gap:8px; }
 .card-group-actions { display:flex; gap:6px; }
-.card-group-subtotal { font-family:'DM Mono',monospace; font-size:9px; color:var(--muted); padding:2px 12px 6px; display:flex; justify-content:space-between; }
-body.white-glass .card-group-subtotal { color:var(--muted); }
+.card-group-subtotal { font-family:'DM Mono',monospace; font-size:9px; padding:4px 12px 8px; display:flex; justify-content:space-between; background:rgba(5,8,30,.4); }
+body.white-glass .card-group-subtotal { background:rgba(200,215,240,.4); }
+.subtotal-remaining-text { color:var(--danger); }
+.subtotal-total-text     { color:rgba(240,244,255,.7); }
+body.white-glass .subtotal-remaining-text { color:#c0392b; }
+body.white-glass .subtotal-total-text     { color:var(--muted); }
 
 .card-task {
   background:rgba(10,15,50,.55);
