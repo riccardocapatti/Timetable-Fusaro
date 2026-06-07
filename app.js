@@ -144,7 +144,7 @@ function renderGroupHeader(tbody, group, c) {
   tr.innerHTML = `
     <td colspan="6">
       <div class="group-header-inner" style="background:'+groupBg(c.color)+'">
-        <span class="group-label" style="color:${c.color}" data-action="toggle-group" data-group="${group.id}">
+        <span class="group-label" data-action="toggle-group" data-group="${group.id}">
           <span class="collapse-icon">▸</span> ${escHtml(group.label)}${groupAssignBadge}
         </span>
         <div class="group-actions">
@@ -613,7 +613,7 @@ function renderCardList() {
     headerEl.className = 'card-group-header';
     headerEl.style.background = groupBg(c.color);
     headerEl.innerHTML =
-      '<span class="card-group-label" style="color:' + c.color + '">' +
+      '<span class="card-group-label">' +
         '<span class="collapse-icon"' + (group.collapsed ? ' style="transform:rotate(-90deg)"' : '') + '>▸</span>' +
         escHtml(group.label) +
       '</span>' +
