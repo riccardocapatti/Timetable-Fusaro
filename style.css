@@ -541,7 +541,7 @@ body.white-glass #loading-overlay { background:rgba(200,220,240,.88); }
 .card-group-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.18em; text-transform:uppercase; font-weight:500; display:flex; align-items:center; gap:8px; }
 .card-group-actions { display:flex; gap:6px; }
 .card-group-subtotal { font-family:'DM Mono',monospace; font-size:9px; padding:4px 12px 8px; display:flex; justify-content:space-between; background:rgba(5,8,30,.4); }
-body.white-glass .card-group-subtotal { background:rgba(220,232,248,.7); border-left:1px solid rgba(255,255,255,.85); border-right:1px solid rgba(255,255,255,.85); }
+body.white-glass .card-group-subtotal { background:rgba(29,110,245,.18); border-left:1px solid rgba(29,110,245,.25); border-right:1px solid rgba(29,110,245,.25); }
 .subtotal-remaining-text { color:var(--danger); }
 .subtotal-total-text     { color:rgba(240,244,255,.7); }
 body.white-glass .subtotal-remaining-text { color:#c0392b; }
@@ -585,6 +585,8 @@ body.white-glass .card-task-meta b { color:#0f1623; }
 
 .card-add-task-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; height:40px; background:transparent; border:1px dashed var(--glass-border); border-top:none; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); cursor:pointer; transition:all .15s; border-radius:0 0 var(--card-radius) var(--card-radius); }
 .card-add-task-btn:hover { color:var(--accent); border-color:rgba(79,142,247,.4); background:rgba(79,142,247,.04); }
+body.white-glass .card-add-task-btn { color:#fff; border-color:rgba(29,110,245,.6); background:rgba(29,110,245,.45); }
+body.white-glass .card-add-task-btn:hover { color:#fff; border-color:rgba(29,110,245,.8); background:rgba(29,110,245,.58); }
 .card-add-group-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; height:50px; background:rgba(255,255,255,.04); border:1px dashed var(--glass-border); border-radius:var(--card-radius); font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); cursor:pointer; transition:all .15s; margin-top:4px; }
 .card-add-group-btn:hover { color:var(--accent); border-color:rgba(79,142,247,.4); }
 
