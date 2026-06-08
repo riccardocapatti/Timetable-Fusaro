@@ -212,7 +212,7 @@ function renderAddTaskRow(tbody, group, c) {
   tr.innerHTML = `
     <td colspan="6">
       <div class="add-task-inner" style="background:${groupBg(c.color)}">
-        <button class="add-task-btn" data-action="add-task" data-group="${group.id}" style="color:${c.color}88">
+        <button class="add-task-btn" data-action="add-task" data-group="${group.id}">
           <span style="font-size:14px;line-height:1">+</span> Aggiungi attività
         </button>
       </div>
@@ -771,8 +771,8 @@ function renderCardList() {
       if (typeof isCapoCantiere !== 'function' || isCapoCantiere()) {
         var addBtn = document.createElement('button');
         addBtn.className = 'card-add-task-btn';
-        addBtn.style.borderColor = c.color + '44';
-        addBtn.style.color = c.color + 'aa';
+        addBtn.className = 'card-add-task-btn';
+        // color and border set by CSS only
         addBtn.textContent = '+ Aggiungi attività';
         addBtn.addEventListener('click', function() { addTask(group.id); });
         groupEl.appendChild(addBtn);
