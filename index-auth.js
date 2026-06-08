@@ -38,44 +38,76 @@ firebase.auth().onAuthStateChanged(function(user) {
 // Checks if a pre-registered record exists (added by capo_cantiere before first login)
 // If found, migrates it to the real UID and preserves the role/name set by capo.
 function registerUser(user) {
-  var realRef        = firebase.database().ref("users/" + user.uid);
-  var email          = user.email.toLowerCase();
-  var placeholderKey = "pre_" + email.replace(/[.@]/g, "_");
-  var preRef         = firebase.database().ref("users/" + placeholderKey);
+  var realRef = firebase.database().ref("users/" + user.uid);
+  var email   = user.email.toLowerCase();
 
   return realRef.once("value").then(function(snap) {
     if (snap.exists()) {
-      // Already registered with real UID — just update last login
-      return realRef.update({ lastLogin: Date.now() });
+      // Already registered — update last login and fix display name if needed
+      var existing = snap.val();
+      var updates  = { lastLogin: Date.now() };
+      // If name is still the raw email prefix, try to improve it
+      if (existing.name && existing.name === email.split("@")[0]) {
+        updates.name = formatDisplayName(email);
+      }
+      return realRef.update(updates);
     }
 
-    // No real UID record — check for a pre-registered placeholder
-    return preRef.once("value").then(function(preSnap) {
-      if (preSnap.exists()) {
-        var preData = preSnap.val();
-        // Migrate: write to real UID, delete placeholder
-        return realRef.set({
-          uid:          user.uid,
-          email:        email,
-          name:         preData.name || user.email.split("@")[0],
-          role:         preData.role || "operaio",
-          createdAt:    Date.now(),
-          migratedFrom: placeholderKey
-        }).then(function() {
-          return preRef.remove();
+    // No real UID record yet — search all users for a pre-registered record
+    // matching this email (manager may have added them before first login)
+    return firebase.database().ref("users")
+      .orderByChild("email")
+      .equalTo(email)
+      .once("value")
+      .then(function(querySnap) {
+        var preKey  = null;
+        var preData = null;
+
+        querySnap.forEach(function(child) {
+          // Find a pre-registered record (key starts with "pre_" or has preRegistered flag)
+          if (child.key !== user.uid &&
+              (child.key.indexOf("pre_") === 0 || child.val().preRegistered)) {
+            preKey  = child.key;
+            preData = child.val();
+          }
         });
-      } else {
-        // Truly new user — create with default role
-        return realRef.set({
-          uid:       user.uid,
-          email:     email,
-          name:      user.displayName || user.email.split("@")[0],
-          role:      "operaio",
-          createdAt: Date.now()
-        });
-      }
-    });
+
+        if (preData) {
+          // Found pre-registered record — migrate to real UID
+          return realRef.set({
+            uid:          user.uid,
+            email:        email,
+            name:         preData.name || formatDisplayName(email),
+            role:         preData.role || "operaio",
+            createdAt:    Date.now(),
+            migratedFrom: preKey
+          }).then(function() {
+            // Remove the placeholder
+            return firebase.database().ref("users/" + preKey).remove();
+          });
+        } else {
+          // Truly new user — create with default role and formatted name
+          return realRef.set({
+            uid:       user.uid,
+            email:     email,
+            name:      formatDisplayName(email),
+            role:      "operaio",
+            createdAt: Date.now()
+          });
+        }
+      });
   });
+}
+
+// Format display name from email: nome.cognome@fusaroimpianti.it → Nome Cognome
+function formatDisplayName(email) {
+  var prefix = email.split("@")[0];           // "nome.cognome"
+  return prefix
+    .split(".")
+    .map(function(part) {
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    })
+    .join(" ");                                // "Nome Cognome"
 }
 
 // ── Send magic link ─────────────────────────────────────────

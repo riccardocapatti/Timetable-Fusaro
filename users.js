@@ -7,6 +7,7 @@ var currentUserData = null;   // { uid, name, email, role }
 var allUsers        = {};     // uid → { uid, name, email, role }
 
 var ROLES = {
+  manager:       "Manager",
   capo_cantiere: "Capo Cantiere",
   operaio:       "Operaio"
 };
@@ -72,8 +73,16 @@ function loadAllUsers() {
 }
 
 // ── Role checks ───────────────────────────────────────────────
+function isManager() {
+  return currentUserData && currentUserData.role === "manager";
+}
+
 function isCapoCantiere() {
-  return currentUserData && currentUserData.role === "capo_cantiere";
+  // Manager inherits all capo_cantiere permissions
+  return currentUserData && (
+    currentUserData.role === "capo_cantiere" ||
+    currentUserData.role === "manager"
+  );
 }
 
 function canEditTask(task) {
@@ -283,10 +292,20 @@ function rebuildUserListHtml(list) {
         '<span class="user-list-email">' + escHtml(u.email || "") + '</span>' +
       '</div>' +
       '<div style="display:flex;align-items:center;gap:6px">' +
-        '<select class="user-role-select" data-uid="' + uid + '">' +
-          '<option value="operaio"'       + (role === "operaio"       ? " selected" : "") + '>Operaio</option>' +
-          '<option value="capo_cantiere"' + (role === "capo_cantiere" ? " selected" : "") + '>Capo Cantiere</option>' +
-        '</select>' +
+        (isManager() ?
+          '<select class="user-role-select" data-uid="' + uid + '">' +
+            '<option value="operaio"'       + (role === "operaio"       ? " selected" : "") + '>Operaio</option>' +
+            '<option value="capo_cantiere"' + (role === "capo_cantiere" ? " selected" : "") + '>Capo Cantiere</option>' +
+            '<option value="manager"'       + (role === "manager"       ? " selected" : "") + '>Manager</option>' +
+          '</select>'
+        : isCapoCantiere() && role !== "manager" ?
+          '<select class="user-role-select" data-uid="' + uid + '" data-restricted="1">' +
+            '<option value="operaio"'       + (role === "operaio"       ? " selected" : "") + '>Operaio</option>' +
+            '<option value="capo_cantiere"' + (role === "capo_cantiere" ? " selected" : "") + '>Capo Cantiere</option>' +
+          '</select>'
+        :
+          '<span class="user-role role-manager" style="font-size:9px;padding:3px 8px">Manager</span>'
+        ) +
         '<button class="icon-btn danger" style="width:20px;height:20px;font-size:11px;flex-shrink:0" ' +
           'data-action="delete-user" data-uid="' + uid + '" title="Rimuovi utente">&#x2715;</button>' +
       '</div>' +
@@ -305,6 +324,7 @@ function rebuildUserListHtml(list) {
         '<select class="user-role-select" id="new-user-role" style="flex-shrink:0">' +
           '<option value="operaio">Operaio</option>' +
           '<option value="capo_cantiere">Capo Cantiere</option>' +
+          (isManager() ? '<option value="manager">Manager</option>' : '') +
         '</select>' +
         '<button class="auth-btn" id="btn-add-user" style="padding:8px 14px;font-size:12px;margin:0;flex-shrink:0;width:auto">+ Aggiungi</button>' +
       '</div>' +
@@ -314,10 +334,17 @@ function rebuildUserListHtml(list) {
   list.innerHTML = rows + addForm;
 
   // ── Wire role dropdowns ────────────────────────────────────
+  // ── Wire role dropdowns ────────────────────────
   list.querySelectorAll(".user-role-select[data-uid]").forEach(function(sel) {
     sel.addEventListener("change", function() {
       var uid     = this.dataset.uid;
       var newRole = this.value;
+      // Block capo_cantiere from assigning or reaching manager role
+      if (!isManager() && newRole === "manager") {
+        alert("Solo un Manager può assegnare il ruolo Manager.");
+        sel.value = allUsers[uid] ? allUsers[uid].role : "operaio";
+        return;
+      }
       firebase.database().ref("users/" + uid + "/role").set(newRole)
         .then(function() {
           if (allUsers[uid]) allUsers[uid].role = newRole;
