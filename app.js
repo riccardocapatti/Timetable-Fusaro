@@ -506,6 +506,26 @@ async function editTask(gid, tid) {
   render();
 }
 
+async function editNote(gid, tid) {
+  var task = findTask(gid, tid); if (!task) return;
+  var result = await openModal(
+    'Nota — ' + task.name,
+    '<div class="field-group">' +
+      '<label class="field-label">Nota</label>' +
+      '<textarea class="field-input field-textarea" data-field="note" placeholder="Aggiungi una nota..." rows="5">' +
+        escHtml(task.note || '') +
+      '</textarea>' +
+    '</div>',
+    'Salva'
+  );
+  if (result === null) return;
+  task.note = (result.note || '').trim();
+  task.updatedBy = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.uid : '';
+  task.updatedAt = Date.now();
+  if (typeof dbSaveTask === "function") dbSaveTask(gid, task);
+  render();
+}
+
 function deleteTask(gid, tid) {
   if (!confirm('Eliminare questa attività?')) return;
   const g = findGroup(gid); if (!g) return;
@@ -740,7 +760,7 @@ function renderCardList() {
             var gid    = this.dataset.group;
             if (action === 'edit-task')   editTask(gid, tid);
             if (action === 'delete-task') deleteTask(gid, tid);
-            if (action === 'view-note')   editTask(gid, tid); // opens full edit modal
+            if (action === 'view-note')   editNote(gid, tid);
           });
         });
 
@@ -917,7 +937,7 @@ async function assignGroup(gid) {
       '<input type="checkbox" class="assign-checkbox" value="' + uid + '" ' + checked + '>' +
       '<span class="assign-name">' + escHtml(u.name || u.email) + '</span>' +
       '<span class="assign-role role-' + (u.role||'operaio') + '">' +
-        (u.role === 'capo_cantiere' ? 'Capo' : 'Operaio') +
+        (u.role === 'manager' ? 'Manager' : u.role === 'capo_cantiere' ? 'Capo' : 'Operaio') +
       '</span>' +
     '</label>';
   }).join('');
