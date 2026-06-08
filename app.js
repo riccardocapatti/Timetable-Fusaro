@@ -187,6 +187,7 @@ function renderTaskRow(tbody, task, group, c) {
         ${prioBadgeHtml(task.priority)}
         ${dueBadgeHtml(task.dueDate)}
         ${typeof assignmentBadgeHtml === 'function' ? assignmentBadgeHtml(task) : ''}
+        ${task.note ? '<span class="note-badge" title="' + escHtml(task.note) + '">💬</span>' : ''}
         <div class="row-actions">
           <button class="icon-btn" title="Modifica" data-action="edit-task"   data-task="${task.id}" data-group="${group.id}">✎</button>
           <button class="icon-btn danger" title="Elimina" data-action="delete-task" data-task="${task.id}" data-group="${group.id}">✕</button>
@@ -455,7 +456,11 @@ function taskModalBody(t) {
         <input class="field-input" data-field="dueDate" type="date" value="${escHtml(due)}" style="color-scheme:dark;" />
       </div>
     </div>
-    ${assignHtml}`;
+    ${assignHtml}
+    <div class="field-group">
+      <label class="field-label">Note</label>
+      <textarea class="field-input field-textarea" data-field="note" placeholder="Aggiungi una nota..." rows="2">${escHtml(t?.note||'')}</textarea>
+    </div>`;
 }
 
 async function addTask(gid) {
@@ -467,6 +472,7 @@ async function addTask(gid) {
     id:uid(), name:result.name,
     days:result.days||'—', people:parseFloat(result.people)||1,
     status:'none', priority:result.priority||'', dueDate:result.dueDate||'',
+    note:result.note||'',
     assignedTo:[], order: group.tasks.length,
     updatedBy: (typeof currentUser !== 'undefined' && currentUser) ? currentUser.uid : '',
     updatedAt: Date.now()
@@ -486,6 +492,7 @@ async function editTask(gid, tid) {
   task.people   = parseFloat(result.people) || 1;
   task.priority = result.priority || '';
   task.dueDate  = result.dueDate  || '';
+  task.note     = result.note     || '';
   // Read assignment if capo_cantiere
   if (typeof readAssignmentFromModal === 'function') {
     task.assignedTo = readAssignmentFromModal();
@@ -705,6 +712,9 @@ function renderCardList() {
                 '</button>' +
                 '<button class="card-icon-btn card-delete-icon" data-action="delete-task" data-task="' + task.id + '" data-group="' + group.id + '" title="Elimina">' +
                   '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16"><line x1="5" y1="5" x2="15" y2="15"/><line x1="15" y1="5" x2="5" y2="15"/></svg>' +
+                '</button>' +
+                '<button class="card-icon-btn card-note-icon' + (task.note ? ' has-note' : '') + '" data-action="view-note" data-task="' + task.id + '" data-group="' + group.id + '" title="' + (task.note ? escHtml(task.note) : 'Aggiungi nota') + '">' +
+                  '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" width="16" height="16"><path d="M4 4h12v9H4z"/><path d="M4 13l3 3h9V4"/><line x1="7" y1="8" x2="13" y2="8"/><line x1="7" y1="11" x2="11" y2="11"/></svg>' +
                 '</button>'
               : '') +
             '</div>' +
@@ -714,7 +724,8 @@ function renderCardList() {
             '<span><b>' + (isNaN(parseNum(task.days)) ? '—' : fmtNum(parseNum(task.days))) + '</b> ore</span>' +
             '<span><b>×' + task.people + '</b> pers.</span>' +
             '<span><b>' + fmtNum(gu) + '</b> ore tot.</span>' +
-          '</div>';
+          '</div>' +
+          (task.note ? '<div class="card-task-note">' + escHtml(task.note) + '</div>' : '');
 
         // Wire status icon
         card.querySelector('.card-status-icon').addEventListener('click', function() {
@@ -729,6 +740,7 @@ function renderCardList() {
             var gid    = this.dataset.group;
             if (action === 'edit-task')   editTask(gid, tid);
             if (action === 'delete-task') deleteTask(gid, tid);
+            if (action === 'view-note')   editTask(gid, tid); // opens full edit modal
           });
         });
 

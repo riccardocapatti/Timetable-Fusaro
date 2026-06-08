@@ -144,6 +144,7 @@ function normalizeDbData(raw) {
         priority:   t.priority   || "",
         dueDate:    t.dueDate    || "",
         assignedTo: t.assignedTo ? Object.keys(t.assignedTo) : [],
+        note:       t.note       || "",
         updatedBy:  t.updatedBy  || "",
         updatedAt:  t.updatedAt  || 0
       };

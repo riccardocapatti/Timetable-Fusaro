@@ -147,7 +147,7 @@ function assignmentPickerHtml(task) {
     return '<label class="assign-option">' +
       '<input type="checkbox" class="assign-checkbox" value="' + uid + '" ' + checked + '>' +
       '<span class="assign-name">' + escHtml(u.name) + '</span>' +
-      '<span class="assign-role role-' + u.role + '">' + (ROLES[u.role] || u.role) + '</span>' +
+      '<span class="assign-role role-' + (u.role||'operaio') + '">' + (ROLES[u.role||'operaio'] || u.role || 'Operaio') + '</span>' +
       '</label>';
   }).join("");
 

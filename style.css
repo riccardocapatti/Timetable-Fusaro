@@ -721,3 +721,45 @@ body.white-glass .drag-ghost { background:rgba(29,110,245,.15); border-color:rgb
 }
 
 body.white-glass .card-group-header { background-color:rgba(255,255,255,.6) !important; border:1px solid rgba(255,255,255,.85); }
+
+/* ═══════════════════════════════════════════════════
+   ACTIVITY NOTES
+   ═══════════════════════════════════════════════════ */
+.field-textarea {
+  resize:vertical;
+  min-height:56px;
+  font-size:13px;
+  line-height:1.5;
+}
+
+/* Note display on card */
+.card-task-note {
+  font-size:11px;
+  color:var(--muted);
+  line-height:1.4;
+  font-style:italic;
+  padding:4px 0 0 12px;
+  border-left:2px solid rgba(255,255,255,.15);
+}
+body.white-glass .card-task-note { border-left-color:rgba(29,110,245,.2); }
+
+/* Note icon on card — highlighted when note exists */
+.card-note-icon { color:var(--muted); }
+.card-note-icon.has-note {
+  color:var(--accent2);
+  border-color:rgba(255,213,128,.35);
+  background:rgba(255,213,128,.1);
+}
+body.white-glass .card-note-icon.has-note {
+  color:#c07000;
+  border-color:rgba(192,112,0,.3);
+  background:rgba(192,112,0,.08);
+}
+
+/* Note badge on table row */
+.note-badge {
+  font-size:11px;
+  cursor:default;
+  opacity:.7;
+}
+.note-badge:hover { opacity:1; }
