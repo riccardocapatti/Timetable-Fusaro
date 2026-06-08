@@ -1353,6 +1353,11 @@ function deleteTrasferta(id) {
 // ─────────────────────────────────────────────
 var VERSION_HISTORY = [
   {
+    v: 'v0.07', date: '2026-06-08',
+    files: ['app.js', 'users.js', 'db.js', 'style.css', 'index-auth.js'],
+    desc: 'Aggiunto ruolo Manager (sopra Capo Cantiere). Solo il Manager può modificare i ruoli utente. Note per attività: icona dedicata che apre un modal minimale. Pre-registrazione utenti corretta: associazione tramite ricerca email invece di chiave placeholder.'
+  },
+  {
     v: 'v0.06', date: '2026-06-07',
     files: ['style.css', 'app.js', 'timetable.html'],
     desc: 'Blocco scroll pagina quando menu aperto. Rinominato: Giorni → Ore, colonna calcolata → Ore Totali. Card meta aggiornata. Giorni ora rappresentano ore effettive di lavoro.'
