@@ -587,8 +587,8 @@ body.white-glass .card-task-meta b { color:#0f1623; }
 
 .card-add-task-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; height:40px; background:transparent; border:1px dashed var(--glass-border); border-top:none; font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); cursor:pointer; transition:all .15s; border-radius:0 0 var(--card-radius) var(--card-radius); }
 .card-add-task-btn:hover { color:var(--accent); border-color:rgba(79,142,247,.4); background:rgba(79,142,247,.04); }
-body.white-glass .card-add-task-btn { color:#fff; border-color:#1d6ef5; background:#1d6ef5; border-top:none; letter-spacing:.12em; }
-body.white-glass .card-add-task-btn:hover { color:#fff; border-color:#1555d4; background:#1555d4; }
+body.white-glass .card-add-task-btn { color:#fff; border:1px dashed rgba(29,110,245,.5); border-top:none; background:rgba(29,110,245,.35); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+body.white-glass .card-add-task-btn:hover { color:#fff; border-color:rgba(29,110,245,.7); background:rgba(29,110,245,.48); }
 .card-add-group-btn { display:flex; align-items:center; justify-content:center; gap:8px; width:100%; height:50px; background:rgba(255,255,255,.04); border:1px dashed var(--glass-border); border-radius:var(--card-radius); font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); cursor:pointer; transition:all .15s; margin-top:4px; }
 .card-add-group-btn:hover { color:var(--accent); border-color:rgba(79,142,247,.4); }
 
