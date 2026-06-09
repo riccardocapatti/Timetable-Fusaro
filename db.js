@@ -47,13 +47,15 @@ function dbDeleteGroup(groupId) {
 }
 
 // ── TRASFERTE ────────────────────────────────────────────────
-function dbSaveTrasferta(t) {
-  return dbRef("trasferte/" + t.id).set(t)
+function dbSaveTrasferta(t, uid) {
+  var path = uid ? "trasferte/" + uid + "/" + t.id : "trasferte/shared/" + t.id;
+  return dbRef(path).set(t)
     .catch(function(e){ console.error(e); });
 }
 
-function dbDeleteTrasferta(id) {
-  return dbRef("trasferte/" + id).remove()
+function dbDeleteTrasferta(id, uid) {
+  var path = uid ? "trasferte/" + uid + "/" + id : "trasferte/shared/" + id;
+  return dbRef(path).remove()
     .catch(function(e){ console.error(e); });
 }
 
@@ -106,15 +108,25 @@ function dbSubscribe(onData, onError) {
     }
   );
 
-  // Subscribe to trasferte
+  // Subscribe to trasferte — all users' trasferte (capo sees all, operaio sees own)
+  // Stored flat under trasferte/{uid}/{id} — we subscribe to the whole collection
   dbRef("trasferte").on("value",
     function(snap) {
-      latestTrasferte = snap.val() || {};
-      trasferteReady  = true;
+      // Flatten: {uid: {id: t}} → {id: t} merging all users
+      var raw = snap.val() || {};
+      latestTrasferte = {};
+      Object.keys(raw).forEach(function(uid) {
+        var userTrasferte = raw[uid] || {};
+        Object.keys(userTrasferte).forEach(function(tid) {
+          // Attach ownerUid so we know who owns it
+          var t = Object.assign({}, userTrasferte[tid], { ownerUid: uid });
+          latestTrasferte[tid] = t;
+        });
+      });
+      trasferteReady = true;
       emitIfReady();
     },
     function(err) {
-      // Trasferte read error — non-fatal for operaio, continue with empty
       console.warn("Trasferte subscription error (non-fatal):", err);
       trasferteReady = true;
       emitIfReady();

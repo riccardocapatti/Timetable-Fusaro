@@ -191,6 +191,9 @@ function renderTaskRow(tbody, task, group, c) {
         <div class="row-actions">
           <button class="icon-btn" title="Modifica" data-action="edit-task"   data-task="${task.id}" data-group="${group.id}">✎</button>
           <button class="icon-btn danger" title="Elimina" data-action="delete-task" data-task="${task.id}" data-group="${group.id}">✕</button>
+          <button class="icon-btn ${task.note ? 'note-active' : ''}" title="${task.note ? escHtml(task.note) : 'Aggiungi nota'}" data-action="edit-note" data-task="${task.id}" data-group="${group.id}">
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" width="12" height="12"><path d="M3 3h10v8H3z"/><path d="M3 11l2 2h8V3"/><line x1="5" y1="6" x2="11" y2="6"/><line x1="5" y1="9" x2="9" y2="9"/></svg>
+          </button>
         </div>
       </div>
     </td>
@@ -383,9 +386,14 @@ async function cloneGroup(gid) {
 function archiveGroup(gid) {
   var g = findGroup(gid); if (!g) return;
   g.archived = true;
+  // Remove from local appData immediately so render() hides it now
+  appData.groups = appData.groups.map(function(x) {
+    return x.id === gid ? Object.assign({}, x, { archived: true }) : x;
+  });
   if (typeof dbSaveGroupMeta === 'function') dbSaveGroupMeta(g);
   render();
-  renderArchivePanel(); // refresh archive if open
+  renderCardList();
+  renderArchivePanel();
 }
 
 function unarchiveGroup(gid) {
@@ -496,12 +504,14 @@ async function editTask(gid, tid) {
   // Read assignment if capo_cantiere
   if (typeof readAssignmentFromModal === 'function') {
     task.assignedTo = readAssignmentFromModal();
+    // Convert to {uid:true} object for Firebase rules compatibility
     if (typeof dbSetTaskAssignment === 'function') {
-      dbSetTaskAssignment(gid, tid, task.assignedTo);
+      dbSetTaskAssignment(gid, task.id, task.assignedTo);
     }
   }
   task.updatedBy = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.uid : '';
   task.updatedAt = Date.now();
+  // dbSaveTask writes the whole task — ensure assignedTo is already set above
   if (typeof dbSaveTask === 'function') { dbSaveTask(gid, task); } else { saveData(); }
   render();
 }
@@ -593,6 +603,7 @@ document.getElementById('table-body').addEventListener('click', e => {
   if (action === 'add-task')     { addTask(gid); return; }
   if (action === 'edit-task')    { editTask(gid, tid); return; }
   if (action === 'delete-task')  { deleteTask(gid, tid); return; }
+  if (action === 'edit-note')    { editNote(gid, tid); return; }
   if (action === 'rename-group') { renameGroup(gid); return; }
   if (action === 'clone-group')  { cloneGroup(gid); return; }
   if (action === 'delete-group') { deleteGroup(gid); return; }
@@ -1096,7 +1107,7 @@ async function addTrasferta() {
   if (!appData.trasferte) appData.trasferte = [];
   var t = { id:uid(), giorni:r.giorni||'1', luogo:r.luogo };
   appData.trasferte.push(t);
-  if (typeof dbSaveTrasferta === 'function') dbSaveTrasferta(t); else saveData();
+  if (typeof dbSaveTrasferta === 'function') dbSaveTrasferta(t, currentUser ? currentUser.uid : null); else saveData();
   renderTrasferte();
 }
 
@@ -1105,14 +1116,14 @@ async function editTrasferta(id) {
   const r = await openModal('Modifica Trasferta', trasfertaBody(t));
   if (!r?.luogo) return;
   t.giorni = r.giorni||'1'; t.luogo = r.luogo;
-  if (typeof dbSaveTrasferta === 'function') dbSaveTrasferta(t); else saveData();
+  if (typeof dbSaveTrasferta === 'function') dbSaveTrasferta(t, currentUser ? currentUser.uid : null); else saveData();
   renderTrasferte();
 }
 
 function deleteTrasferta(id) {
   if (!confirm('Eliminare questa trasferta?')) return;
   appData.trasferte = (appData.trasferte||[]).filter(function(t){ return t.id !== id; });
-  if (typeof dbDeleteTrasferta === 'function') dbDeleteTrasferta(id); else saveData();
+  if (typeof dbDeleteTrasferta === 'function') dbDeleteTrasferta(id, currentUser ? currentUser.uid : null); else saveData();
   renderTrasferte();
 }
 

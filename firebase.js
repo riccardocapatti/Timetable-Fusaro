@@ -78,47 +78,10 @@ firebase.auth().onAuthStateChanged(function(user) {
 
 // ── Check DB, migrate if needed ───────────────────────────────
 function checkAndMigrate() {
-  console.log("[DB] checkAndMigrate start");
-
-  dbRef("groups").once("value")
-    .then(function(snap) {
-      console.log("[DB] v2 groups exists:", snap.exists(), "numChildren:", snap.numChildren());
-
-      if (snap.exists()) {
-        console.log("[DB] v2 data found — subscribing");
-        startSubscription();
-        return;
-      }
-
-      // No v2 — check v1
-      console.log("[DB] No v2 data — checking v1");
-      showLoading(true, "Controllo dati precedenti…");
-
-      return firebase.database().ref("piano/v1/groups").once("value")
-        .then(function(v1snap) {
-          console.log("[DB] v1 groups exists:", v1snap.exists());
-
-          if (v1snap.exists()) {
-            showLoading(true, "Migrazione dati…");
-            return firebase.database().ref("piano/v1").once("value")
-              .then(function(full) {
-                return dbMigrateFromV1(full.val());
-              })
-              .then(function() {
-                console.log("[DB] Migration done — subscribing");
-                startSubscription();
-              });
-          } else {
-            // Truly empty DB — start immediately, don't wait for data
-            console.log("[DB] Empty DB — starting empty");
-            startSubscription();
-          }
-        });
-    })
-    .catch(function(err) {
-      console.error("[DB] checkAndMigrate error:", err);
-      showLoadingError("Errore database: " + err.message + " — Verifica le regole Firebase.");
-    });
+  // v1→v2 migration removed — migration completed, v2 is the only data store.
+  // Just start the subscription directly.
+  console.log("[DB] Starting subscription");
+  startSubscription();
 }
 
 // ── Realtime subscription ─────────────────────────────────────
