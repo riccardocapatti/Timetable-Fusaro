@@ -268,9 +268,12 @@ th {
 body.white-glass th { color:var(--muted); }
 th.right  { text-align:right; }
 th.center { text-align:center; }
-td { padding:12px 16px; vertical-align:middle; color:#f0f4ff; }
-.task-row + .task-row { border-top:1px solid rgba(255,255,255,.06); }
-body.white-glass .task-row + .task-row { border-top:1px solid rgba(29,110,245,.08); }
+td { padding:11px 16px; vertical-align:middle; color:#f0f4ff; }
+/* Clear separation between task rows */
+.task-row { border-bottom:1px solid rgba(255,255,255,.08); }
+.task-row:last-of-type { border-bottom:none; }
+body.white-glass .task-row { border-bottom:1px solid rgba(29,110,245,.1); }
+body.white-glass .task-row:last-of-type { border-bottom:none; }
 body.white-glass td { color:#0f1623; }
 
 /* ── Group headers ── */

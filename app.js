@@ -501,13 +501,9 @@ async function editTask(gid, tid) {
   task.priority = result.priority || '';
   task.dueDate  = result.dueDate  || '';
   task.note     = result.note     || '';
-  // Read assignment if capo_cantiere
+  // Read assignment if capo_cantiere — dbSaveTask handles {uid:true} conversion
   if (typeof readAssignmentFromModal === 'function') {
     task.assignedTo = readAssignmentFromModal();
-    // Convert to {uid:true} object for Firebase rules compatibility
-    if (typeof dbSetTaskAssignment === 'function') {
-      dbSetTaskAssignment(gid, task.id, task.assignedTo);
-    }
   }
   task.updatedBy = (typeof currentUser !== 'undefined' && currentUser) ? currentUser.uid : '';
   task.updatedAt = Date.now();
