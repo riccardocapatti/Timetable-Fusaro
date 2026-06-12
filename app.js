@@ -297,6 +297,44 @@ document.getElementById('modal-body').addEventListener('keydown', e => {
   if (e.key==='Enter' && e.target.tagName!=='TEXTAREA') document.getElementById('modal-confirm').click();
 });
 
+// Three-choice confirmation dialog — returns 'all', 'empty', or null (cancel)
+function confirmDueDate(date, totalCount, conflictCount) {
+  return new Promise(function(resolve) {
+    var overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    overlay.style.zIndex = '110';
+
+    var box = document.createElement('div');
+    box.className = 'modal';
+    box.style.maxWidth = '400px';
+    box.innerHTML =
+      '<div class="modal-title">Scadenza gruppo</div>' +
+      '<div style="font-size:13px;color:var(--text);margin-bottom:8px">Scadenza impostata: <b>' + date + '</b></div>' +
+      (conflictCount > 0
+        ? '<div class="field-hint" style="color:var(--danger);margin-bottom:16px;font-style:normal">ATTENZIONE: ' + conflictCount + ' attività hanno già una scadenza diversa.</div>'
+        : '<div class="field-hint" style="margin-bottom:16px">Nessuna attività ha una scadenza esistente.</div>'
+      ) +
+      '<div style="display:flex;flex-direction:column;gap:8px">' +
+        '<button class="btn-confirm" id="due-btn-all">Conferma tutto (' + totalCount + ' attività)</button>' +
+        '<button class="btn-cancel" id="due-btn-empty" style="text-align:center">Mantieni esistenti (solo ' + (totalCount - conflictCount) + ' senza scadenza)</button>' +
+        '<button class="btn-cancel" id="due-btn-cancel" style="text-align:center;color:var(--danger)">Annulla</button>' +
+      '</div>';
+
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+
+    function cleanup(result) {
+      document.body.removeChild(overlay);
+      resolve(result);
+    }
+
+    document.getElementById('due-btn-all').addEventListener('click',    function() { cleanup('all'); });
+    document.getElementById('due-btn-empty').addEventListener('click',  function() { cleanup('empty'); });
+    document.getElementById('due-btn-cancel').addEventListener('click', function() { cleanup(null); });
+    overlay.addEventListener('click', function(e) { if (e.target === overlay) cleanup(null); });
+  });
+}
+
 // ─────────────────────────────────────────────
 // LIVE Ore CALC IN MODAL
 // ─────────────────────────────────────────────
@@ -320,7 +358,7 @@ function swatchesHtml(activeIdx) {
 // ─────────────────────────────────────────────
 // GROUP ACTIONS
 // ─────────────────────────────────────────────
-function groupModalBody(label='', colorIdx=0) {
+function groupModalBody(label='', colorIdx=0, dueDate='') {
   return `
     <div class="field-group">
       <label class="field-label">Nome gruppo</label>
@@ -329,6 +367,11 @@ function groupModalBody(label='', colorIdx=0) {
     <div class="field-group">
       <label class="field-label">Colore</label>
       <div class="color-picker" id="color-picker">${swatchesHtml(colorIdx)}</div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Scadenza gruppo (opzionale)</label>
+      <input class="field-input" data-field="groupDueDate" type="date" value="${escHtml(dueDate)}" style="color-scheme:dark" />
+      <div class="field-hint">Se impostata, sovrascrive la scadenza di tutte le attività del gruppo.</div>
     </div>`;
 }
 
@@ -344,10 +387,37 @@ async function addGroup() {
 
 async function renameGroup(gid) {
   const g = findGroup(gid); if (!g) return;
-  const result = await openModal('Modifica Gruppo', groupModalBody(g.label, g.colorIdx));
+  // Show current group due date (most common among tasks, or empty)
+  var currentDue = g.tasks.length ? (g.tasks[0].dueDate || '') : '';
+  const result = await openModal('Modifica Gruppo', groupModalBody(g.label, g.colorIdx, currentDue));
   attachSwatches();
   if (!result?.label) return;
-  g.label = result.label; g.colorIdx = result.colorIdx ?? g.colorIdx;
+
+  g.label    = result.label;
+  g.colorIdx = result.colorIdx ?? g.colorIdx;
+
+
+  // If a group due date was set, apply it to tasks
+  var newDue = (result.groupDueDate || '').trim();
+  if (newDue) {
+    var tasksWithDue = g.tasks.filter(function(t) { return t.dueDate && t.dueDate !== newDue; });
+    var choice = await confirmDueDate(newDue, g.tasks.length, tasksWithDue.length);
+    if (choice === 'all') {
+      g.tasks.forEach(function(t) {
+        t.dueDate = newDue;
+        if (typeof dbSaveTask === 'function') dbSaveTask(gid, t);
+      });
+    } else if (choice === 'empty') {
+      g.tasks.forEach(function(t) {
+        if (!t.dueDate) {
+          t.dueDate = newDue;
+          if (typeof dbSaveTask === 'function') dbSaveTask(gid, t);
+        }
+      });
+    }
+    // null = annullato — nessuna modifica alle scadenze
+  }
+
   if (typeof dbSaveGroupMeta === 'function') { dbSaveGroupMeta(g); } else { saveData(); }
   render();
 }

@@ -780,3 +780,12 @@ body.white-glass .icon-btn.note-active {
   border-color:rgba(192,112,0,.3);
   background:rgba(192,112,0,.08);
 }
+
+/* Field hint text */
+.field-hint {
+  font-size:11px;
+  color:var(--muted);
+  margin-top:5px;
+  line-height:1.4;
+  font-style:italic;
+}
