@@ -789,3 +789,30 @@ body.white-glass .icon-btn.note-active {
   line-height:1.4;
   font-style:italic;
 }
+
+/* ═══════════════════════════════════════════════════
+   COMPLETED GROUP — soft green dotted border
+   ═══════════════════════════════════════════════════ */
+.card-group.group-complete {
+  border-radius:var(--card-radius);
+  outline:2px dashed rgba(82,217,160,.55);
+  outline-offset:2px;
+  box-shadow:0 0 16px rgba(82,217,160,.15);
+}
+/* Table view: highlight the group header row */
+.group-header-row.group-complete td {
+  box-shadow:inset 0 0 0 2px rgba(82,217,160,.45);
+}
+.group-header-row.group-complete .group-header-inner {
+  background:rgba(82,217,160,.07) !important;
+}
+/* Percentage turns bright green when 100% */
+.group-complete .subtotal-pct,
+.group-complete .subtotal-remaining-text { color:#52d9a0; }
+body.white-glass .card-group.group-complete {
+  outline-color:rgba(0,160,80,.45);
+  box-shadow:0 0 16px rgba(0,160,80,.12);
+}
+body.white-glass .group-header-row.group-complete td {
+  box-shadow:inset 0 0 0 2px rgba(0,160,80,.35);
+}

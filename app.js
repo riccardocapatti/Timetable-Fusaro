@@ -135,8 +135,8 @@ function render() {
 
 function renderGroupHeader(tbody, group, c) {
   const tr = document.createElement('tr');
-  tr.className = 'group-header-row' + (group.collapsed ? ' group-collapsed' : '');
-  tr.dataset.groupId = group.id;
+  var _gT = groupTotals(group);
+  tr.className = 'group-header-row' + (group.collapsed ? ' group-collapsed' : '') + (_gT.pct === 100 && _gT.total > 0 ? ' group-complete' : '');
   var assignedUids  = getGroupAssignedUids(group);
   var assignedNames = assignedUids.map(function(uid) {
     var u = (typeof allUsers !== 'undefined' && allUsers[uid]);
@@ -719,8 +719,9 @@ function renderCardList() {
     var c = GROUP_COLORS[group.colorIdx % GROUP_COLORS.length];
 
     // Group wrapper
+    var { total: _t, remaining: _r, pct: _pct } = groupTotals(group);
     var groupEl = document.createElement('div');
-    groupEl.className = 'card-group';
+    groupEl.className = 'card-group' + (_pct === 100 && _t > 0 ? ' group-complete' : '');
     groupEl.dataset.gid = group.id;
 
     // Group header
