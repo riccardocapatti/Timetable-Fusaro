@@ -162,8 +162,10 @@ function normalizeDbData(raw) {
       };
     });
 
-    // Sort tasks by order field if present, else preserve insertion order
-    taskArr.sort(function(a, b) { return (a.order || 0) - (b.order || 0); });
+    // Sort tasks alphabetically by name
+    taskArr.sort(function(a, b) {
+      return (a.name || '').localeCompare(b.name || '', 'it', { sensitivity: 'base' });
+    });
 
     groups.push({
       id:        gid,
