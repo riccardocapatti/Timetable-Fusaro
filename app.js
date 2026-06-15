@@ -131,6 +131,7 @@ function render() {
   updatePills();
   renderCardList();
   if (typeof initDragAndDrop === 'function') initDragAndDrop();
+  if (typeof updateCollapseAllBtn === 'function') updateCollapseAllBtn();
 }
 
 function renderGroupHeader(tbody, group, c) {
@@ -623,36 +624,53 @@ function cycleStatus(gid, tid) {
 // PDF EXPORT
 // ─────────────────────────────────────────────
 function exportPdf(groupId) {
-  // Mark which groups to show/hide for print
-  appData.groups.forEach(g => {
-    const rows = document.querySelectorAll(`[data-group-id="${g.id}"], tr[data-group-id="${g.id}"]`);
-    rows.forEach(r => {
-      if (groupId && g.id !== groupId) { r.classList.add('print-hide'); r.classList.remove('print-show'); }
-      else { r.classList.remove('print-hide'); }
-    });
-    // also header rows
-    const hdr = document.querySelector(`.group-header-row[data-group-id="${g.id}"]`);
-    if (hdr) {
-      if (groupId && g.id !== groupId) hdr.classList.add('print-hide');
-      else hdr.classList.remove('print-hide');
+  // Track rows we temporarily expanded for print
+  var expandedForPrint = [];
+
+  appData.groups.forEach(function(g) {
+    // Always hide archived groups
+    var isArchived  = g.archived;
+    // Hide if groupId filter and not this group
+    var isFiltered  = groupId && g.id !== groupId;
+    var shouldHide  = isArchived || isFiltered;
+
+    // All rows belonging to this group
+    var allRows = document.querySelectorAll('[data-group-id="' + g.id + '"]');
+    var hdr     = document.querySelector('.group-header-row[data-group-id="' + g.id + '"]');
+
+    if (shouldHide) {
+      allRows.forEach(function(r) { r.classList.add('print-hide'); });
+      if (hdr) hdr.classList.add('print-hide');
+    } else {
+      allRows.forEach(function(r) { r.classList.remove('print-hide'); });
+      if (hdr) hdr.classList.remove('print-hide');
+
+      // Force-expand collapsed groups for print
+      if (g.collapsed) {
+        expandedForPrint.push(g.id);
+        document.querySelectorAll(
+          '.collapsed-row[data-group-id="' + g.id + '"]'
+        ).forEach(function(r) { r.classList.add('print-expand'); });
+      }
     }
   });
 
   // Set page title
-  const origTitle = document.title;
+  var origTitle = document.title;
   if (groupId) {
-    const g = findGroup(groupId);
-    document.title = `Piano di Lavoro – ${g ? g.label : 'Gruppo'} – Fusaro Impianti`;
+    var g = findGroup(groupId);
+    document.title = 'Piano di Lavoro – ' + (g ? g.label : 'Gruppo') + ' – Fusaro Impianti';
   } else {
     document.title = 'Piano di Lavoro Completo – Fusaro Impianti S.r.l.';
   }
 
   window.print();
 
-  // Restore after print dialog closes
-  setTimeout(() => {
+  // Restore after print
+  setTimeout(function() {
     document.title = origTitle;
-    document.querySelectorAll('.print-hide').forEach(el => el.classList.remove('print-hide'));
+    document.querySelectorAll('.print-hide').forEach(function(el) { el.classList.remove('print-hide'); });
+    document.querySelectorAll('.print-expand').forEach(function(el) { el.classList.remove('print-expand'); });
   }, 1000);
 }
 
@@ -1118,6 +1136,36 @@ document.addEventListener('DOMContentLoaded', function() {
   var panel = document.getElementById('archive-panel');
   if (panel) panel.addEventListener('click', function(e) {
     if (e.target === panel) closeArchivePanel();
+  });
+});
+
+// ─────────────────────────────────────────────
+// COLLAPSE / EXPAND ALL GROUPS
+// ─────────────────────────────────────────────
+function setAllGroupsCollapsed(collapsed) {
+  appData.groups.forEach(function(g) {
+    if (g.archived) return;
+    g.collapsed = collapsed;
+    if (typeof dbSaveGroupMeta === 'function') dbSaveGroupMeta(g);
+  });
+  render();
+  updateCollapseAllBtn();
+}
+
+function updateCollapseAllBtn() {
+  var btn   = document.getElementById('btn-collapse-all');
+  var label = document.getElementById('collapse-all-label');
+  if (!btn || !label) return;
+  var anyExpanded = appData.groups.some(function(g) { return !g.archived && !g.collapsed; });
+  label.textContent = anyExpanded ? 'Comprimi tutti' : 'Espandi tutti';
+  btn.dataset.collapsed = anyExpanded ? '0' : '1';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var btn = document.getElementById('btn-collapse-all');
+  btn && btn.addEventListener('click', function() {
+    var shouldCollapse = this.dataset.collapsed !== '1';
+    setAllGroupsCollapsed(shouldCollapse);
   });
 });
 

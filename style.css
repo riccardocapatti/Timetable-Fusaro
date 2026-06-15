@@ -700,29 +700,100 @@ body.white-glass .drag-ghost { background:rgba(29,110,245,.15); border-color:rgb
    PRINT / PDF
    ══════════════════════════════════════════════════════════ */
 @media print {
+  /* ── Hide UI chrome ── */
   .topbar, .side-menu, .menu-overlay, .hamburger-btn,
   .group-actions, .row-actions, .add-task-row, .add-group-btn-wrap,
-  .hint, .notes, footer, .icon-btn, .add-trasferta-btn, .trasferta-actions,
-  #card-list-container, .drag-ghost { display:none !important; }
-  body        { background:#fff !important; color:#000 !important; padding:20px !important; }
+  .hint, footer, .icon-btn, .add-trasferta-btn, .trasferta-actions,
+  #card-list-container, .drag-ghost, .loading-dot,
+  #sync-bar, #user-badge, .signout-btn { display:none !important; }
+
+  /* ── Page setup ── */
+  @page { margin:18mm 14mm; size:A4; }
+  body        { background:#fff !important; color:#000 !important; padding:0 !important; font-size:11px; }
   body::before{ display:none; }
-  .table-wrap { display:block !important; border:1px solid #ccc !important; border-radius:0 !important; overflow:visible !important; }
-  .status-btn { background:transparent !important; border:1px solid #ccc !important; color:#000 !important; }
-  .status-btn[data-status="done"]    { border-color:#52d9a0 !important; color:#1a6040 !important; background:#e6f7f0 !important; }
+  .container  { max-width:100% !important; animation:none !important; }
+
+  /* ── Print header ── */
+  .container::before {
+    content:'Fusaro Impianti S.r.l. — Piano di Lavoro';
+    display:block;
+    font-family:'Inter',sans-serif;
+    font-size:18px;
+    font-weight:800;
+    color:#000;
+    border-bottom:2px solid #000;
+    padding-bottom:8px;
+    margin-bottom:16px;
+  }
+
+  /* ── Stats pills ── */
+  .summary { display:flex !important; flex-wrap:wrap !important; gap:8px !important; margin-bottom:16px !important; }
+  .pill { border:1px solid #ccc !important; background:#f9f9f9 !important; padding:6px 12px !important; border-radius:6px !important; backdrop-filter:none !important; box-shadow:none !important; }
+  .pill-label { color:#555 !important; font-size:8px !important; }
+  .pill-value { font-size:16px !important; }
+  .pill-value        { color:#222 !important; }
+  .pill-value.green  { color:#1a6040 !important; }
+  .pill-value.yellow { color:#7a5500 !important; }
+  .pill-value.red    { color:#c00 !important; }
+
+  /* ── Table ── */
+  .table-wrap { display:block !important; border:1px solid #ccc !important; border-radius:0 !important; overflow:visible !important; backdrop-filter:none !important; box-shadow:none !important; }
+  table       { font-size:10px !important; border-collapse:collapse !important; width:100% !important; }
+  th          { background:#f0f0f0 !important; color:#444 !important; border:1px solid #ddd !important; padding:6px 10px !important; font-size:8px !important; }
+  td          { color:#000 !important; border:1px solid #e8e8e8 !important; padding:7px 10px !important; }
+
+  /* ── Group headers ── */
+  .group-header-inner { background:#f5f5f5 !important; backdrop-filter:none !important; }
+  .group-label        { color:#000 !important; font-size:9px !important; letter-spacing:.2em !important; }
+  /* Accent stripe on group: keep color dot */
+  .group-header-row td { border-top:2px solid #ccc !important; }
+
+  /* ── Task rows ── */
+  .task-row           { border-bottom:1px solid #eee !important; }
+  .task-name          { color:#000 !important; font-size:11px !important; }
+  .num, .total-cell   { color:#222 !important; }
+
+  /* ── Status badges ── */
+  .status-btn { background:transparent !important; border:1px solid #ccc !important; color:#888 !important; font-size:8px !important; padding:2px 6px !important; }
+  .status-btn[data-status="done"]    { border-color:#52d9a0 !important; color:#1a6040 !important; background:#ecfdf5 !important; }
   .status-btn[data-status="partial"] { border-color:#d4a000 !important; color:#7a5500 !important; background:#fef9e7 !important; }
   .btn-dot    { display:none !important; }
-  table       { font-size:11px !important; }
-  th, td      { color:#000 !important; border-color:#ddd !important; }
-  .group-header-inner { background:#f0f0f0 !important; }
-  .group-label, .task-name, .num, .total-cell { color:#000 !important; }
+
+  /* ── Priority badges ── */
   .prio-alta  { background:#fde8e8 !important; color:#c00 !important; border-color:#f9a8a8 !important; }
   .prio-media { background:#fef9e7 !important; color:#a06000 !important; border-color:#fde68a !important; }
-  .due-badge  { color:#555 !important; border-color:#ccc !important; }
-  .pill-value, .pill-label { color:#000 !important; }
-  .pill { border:1px solid #ccc !important; }
-  .bar-bg     { background:#eee !important; }
+  .prio-bassa { background:#f0f4f8 !important; color:#555 !important; border-color:#cbd5e1 !important; }
+
+  /* ── Due date ── */
+  .due-badge          { color:#555 !important; border-color:#ccc !important; background:#fff !important; }
+  .due-badge.overdue  { color:#c00 !important; border-color:#f9a8a8 !important; background:#fde8e8 !important; }
+  .due-badge.due-soon { color:#a06000 !important; border-color:#fde68a !important; background:#fef9e7 !important; }
+
+  /* ── Subtotal ── */
+  .subtotal-row td    { background:#fafafa !important; }
+  .subtotal-label, .subtotal-val, .subtotal-remaining { color:#444 !important; }
+  .subtotal-pct       { color:#1a6040 !important; }
+
+  /* ── Notes section ── */
+  .notes { border:1px solid #ddd !important; background:#fafafa !important; backdrop-filter:none !important; box-shadow:none !important; margin-top:12px !important; }
+  .notes-title, .note-item { color:#444 !important; }
+  .trasferta-item { color:#444 !important; }
+  #trasferte-section { display:block !important; }
+
+  /* ── Row visibility ── */
   .print-hide { display:none !important; }
-  .collapsed-row { display:table-row !important; }
+  /* Force-show rows that were expanded for print */
+  .collapsed-row.print-expand { display:table-row !important; }
+  /* Do NOT show other collapsed rows */
+  .collapsed-row:not(.print-expand) { display:none !important; }
+  .subtotal-row.collapsed-row.print-expand { display:table-row !important; }
+  .add-task-row.print-expand { display:none !important; }
+
+  /* ── No color bleed from glass ── */
+  .bar-bg { background:#eee !important; }
+  .bar-fill { opacity:.6 !important; }
+  .assigned-badge { border:1px solid #ddd !important; color:#555 !important; background:#fff !important; }
+  .note-badge { display:none !important; }
 }
 
 body.white-glass .card-group-header { background-color:rgba(255,255,255,.6) !important; border:1px solid rgba(255,255,255,.85); }
