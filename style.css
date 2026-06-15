@@ -782,12 +782,9 @@ body.white-glass .drag-ghost { background:rgba(29,110,245,.15); border-color:rgb
 
   /* ── Row visibility ── */
   .print-hide { display:none !important; }
-  /* Force-show rows that were expanded for print */
-  .collapsed-row.print-expand { display:table-row !important; }
-  /* Do NOT show other collapsed rows */
-  .collapsed-row:not(.print-expand) { display:none !important; }
-  .subtotal-row.collapsed-row.print-expand { display:table-row !important; }
-  .add-task-row.print-expand { display:none !important; }
+  /* collapsed-row class is removed before print by exportPdf() */
+  /* add-task rows never print */
+  .add-task-row { display:none !important; }
 
   /* ── No color bleed from glass ── */
   .bar-bg { background:#eee !important; }
