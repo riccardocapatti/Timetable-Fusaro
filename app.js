@@ -623,31 +623,179 @@ function cycleStatus(gid, tid) {
 // PDF EXPORT
 // ─────────────────────────────────────────────
 function exportPdf(groupId) {
-  // Mark which groups to show/hide for print
-  appData.groups.forEach(function(g) {
-    var rows = document.querySelectorAll('[data-group-id="' + g.id + '"]');
-    rows.forEach(function(r) {
-      if (groupId && g.id !== groupId) { r.classList.add('print-hide'); }
-      else { r.classList.remove('print-hide'); }
-    });
-    var hdr = document.querySelector('.group-header-row[data-group-id="' + g.id + '"]');
-    if (hdr) {
-      if (groupId && g.id !== groupId) hdr.classList.add('print-hide');
-      else hdr.classList.remove('print-hide');
-    }
+  // Build PDF entirely from appData — no DOM dependency.
+  // Works on mobile, desktop, collapsed groups, all views.
+  var today  = new Date().toLocaleDateString('it-IT', { day:'2-digit', month:'long', year:'numeric' });
+  var groups = appData.groups.filter(function(g) {
+    if (g.archived) return false;
+    if (groupId && g.id !== groupId) return false;
+    return true;
   });
 
-  var origTitle = document.title;
-  document.title = groupId
-    ? 'Piano di Lavoro – ' + ((findGroup(groupId) || {}).label || 'Gruppo') + ' – Fusaro Impianti'
-    : 'Piano di Lavoro Completo – Fusaro Impianti S.r.l.';
+  // ── Helpers ──────────────────────────────────────────────
+  function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmt(n) { return isNaN(n) ? '—' : String(Math.round(n*10)/10).replace('.',','); }
+  function gu(t)  { var d=parseFloat(String(t.days||'').replace(',','.')), p=parseFloat(t.people||1); return (isNaN(d)||isNaN(p)) ? NaN : d*p; }
+  function statusLabel(s) { return s==='done' ? 'Completato' : s==='partial' ? 'In corso' : '—'; }
+  function statusColor(s) { return s==='done' ? '#1a6040' : s==='partial' ? '#7a5500' : '#555'; }
+  function statusBg(s)    { return s==='done' ? '#ecfdf5'  : s==='partial' ? '#fef9e7'  : '#f8f8f8'; }
 
-  window.print();
+  // ── Summary totals ────────────────────────────────────────
+  var totTask=0, totDone=0, totPartial=0, totOre=0, totRim=0;
+  groups.forEach(function(g) {
+    g.tasks.forEach(function(t) {
+      totTask++;
+      if (t.status==='done')    totDone++;
+      if (t.status==='partial') totPartial++;
+      var g_ = gu(t);
+      if (!isNaN(g_)) {
+        totOre += g_;
+        if (t.status!=='done') totRim += g_;
+      }
+    });
+  });
 
-  setTimeout(function() {
-    document.title = origTitle;
-    document.querySelectorAll('.print-hide').forEach(function(el) { el.classList.remove('print-hide'); });
-  }, 1000);
+  // ── Group rows HTML ───────────────────────────────────────
+  var groupsHtml = groups.map(function(g) {
+    var c = GROUP_COLORS[g.colorIdx % GROUP_COLORS.length];
+    var gTot=0, gRim=0, gDone=0;
+    g.tasks.forEach(function(t) {
+      var v=gu(t); if(!isNaN(v)){gTot+=v; if(t.status!=='done') gRim+=v;}
+      if(t.status==='done') gDone++;
+    });
+    var pct = gTot > 0 ? Math.round(((gDone + (g.tasks.filter(function(t){return t.status==='partial';}).length * 0.5)) / g.tasks.length) * 100) : 0;
+
+    var taskRows = g.tasks.map(function(t) {
+      var g_ = gu(t);
+      return '<tr class="task-row' + (t.status==='done' ? ' done' : t.status==='partial' ? ' partial' : '') + '">' +
+        '<td class="task-name">' +
+          '<div class="name-accent" style="border-left:3px solid ' + c.color + '">' + esc(t.name) + '</div>' +
+          (t.priority ? '<span class="badge prio-' + t.priority + '">' + (t.priority==='alta'?'▲ Alta':t.priority==='media'?'● Media':'▼ Bassa') + '</span>' : '') +
+          (t.dueDate  ? '<span class="badge due">' + new Date(t.dueDate).toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'}) + '</span>' : '') +
+          (t.note     ? '<div class="task-note">' + esc(t.note) + '</div>' : '') +
+        '</td>' +
+        '<td class="center">' + (isNaN(parseFloat(String(t.days||'').replace(',','.'))) ? '—' : fmt(parseFloat(String(t.days||'').replace(',','.')))) + '</td>' +
+        '<td class="center">' + (t.people||1) + '</td>' +
+        '<td class="center">' + (isNaN(g_) ? '—' : fmt(g_)) + '</td>' +
+        '<td class="center"><span class="status-pill" style="background:' + statusBg(t.status) + ';color:' + statusColor(t.status) + '">' + statusLabel(t.status) + '</span></td>' +
+      '</tr>';
+    }).join('');
+
+    return '<div class="group-block">' +
+      '<div class="group-header" style="border-left:5px solid ' + c.color + '">' +
+        '<div class="group-name">' + esc(g.label) + '</div>' +
+        '<div class="group-stats">' +
+          '<span>' + pct + '% completato</span>' +
+          '<span>Ore rimanenti: <b>' + fmt(gRim) + '</b></span>' +
+          '<span>Ore totali: <b>' + fmt(gTot) + '</b></span>' +
+        '</div>' +
+      '</div>' +
+      '<table>' +
+        '<thead><tr>' +
+          '<th>Attività</th>' +
+          '<th class="center">Ore</th>' +
+          '<th class="center">Pers.</th>' +
+          '<th class="center">Ore Tot.</th>' +
+          '<th class="center">Stato</th>' +
+        '</tr></thead>' +
+        '<tbody>' + taskRows + '</tbody>' +
+      '</table>' +
+    '</div>';
+  }).join('');
+
+  // ── Full HTML document ────────────────────────────────────
+  var html = '<!DOCTYPE html><html lang="it"><head><meta charset="UTF-8">' +
+    '<title>Piano di Lavoro – Fusaro Impianti S.r.l.</title>' +
+    '<style>' +
+      '* { box-sizing:border-box; margin:0; padding:0; }' +
+      'body { font-family: "Helvetica Neue",Arial,sans-serif; font-size:11px; color:#1a1d27; background:#fff; padding:20mm 16mm; }' +
+      '@page { size:A4; margin:15mm 14mm; }' +
+
+      /* Header */
+      '.doc-header { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #1a1d27; padding-bottom:10px; margin-bottom:18px; }' +
+      '.doc-logo { font-size:9px; font-weight:800; letter-spacing:.2em; text-transform:uppercase; color:#444; }' +
+      '.doc-title { font-size:22px; font-weight:900; letter-spacing:-.03em; color:#1a1d27; line-height:1; }' +
+      '.doc-meta { text-align:right; font-size:9px; color:#888; line-height:1.7; }' +
+
+      /* Summary pills */
+      '.summary { display:flex; gap:10px; margin-bottom:20px; }' +
+      '.pill { flex:1; border:1px solid #e0e0e0; border-radius:6px; padding:8px 12px; }' +
+      '.pill-label { font-size:8px; letter-spacing:.12em; text-transform:uppercase; color:#888; }' +
+      '.pill-value { font-size:18px; font-weight:800; color:#1a1d27; }' +
+      '.pill-value.green  { color:#1a6040; }' +
+      '.pill-value.yellow { color:#7a5500; }' +
+      '.pill-value.red    { color:#c0392b; }' +
+
+      /* Group block */
+      '.group-block { margin-bottom:18px; page-break-inside:avoid; }' +
+      '.group-header { display:flex; justify-content:space-between; align-items:center; background:#f5f5f5; padding:8px 12px; margin-bottom:0; }' +
+      '.group-name { font-size:10px; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:#1a1d27; }' +
+      '.group-stats { display:flex; gap:14px; font-size:9px; color:#666; }' +
+      '.group-stats b { color:#1a1d27; }' +
+
+      /* Table */
+      'table { width:100%; border-collapse:collapse; font-size:10px; }' +
+      'thead tr { background:#1a1d27; color:#fff; }' +
+      'th { padding:6px 10px; text-align:left; font-size:8px; letter-spacing:.1em; text-transform:uppercase; font-weight:600; }' +
+      'th.center { text-align:center; }' +
+      'td { padding:7px 10px; border-bottom:1px solid #eee; vertical-align:top; }' +
+      'td.center { text-align:center; vertical-align:middle; }' +
+      'tr.done td { opacity:.5; }' +
+      'tr.done .name-accent { text-decoration:line-through; }' +
+      'tr.partial .task-name { }' +
+
+      /* Task name cell */
+      '.name-accent { padding-left:8px; font-weight:500; color:#1a1d27; line-height:1.4; }' +
+      '.task-note { padding-left:8px; margin-top:3px; font-size:9px; color:#888; font-style:italic; }' +
+      '.badge { display:inline-block; font-size:7px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; border-radius:3px; padding:1px 5px; margin-left:6px; vertical-align:middle; }' +
+      '.prio-alta  { background:#fde8e8; color:#c00; border:1px solid #f9a8a8; }' +
+      '.prio-media { background:#fef9e7; color:#a06000; border:1px solid #fde68a; }' +
+      '.prio-bassa { background:#f0f4f8; color:#555; border:1px solid #cbd5e1; }' +
+      '.due { background:#f0f0f0; color:#555; border:1px solid #ddd; }' +
+
+      /* Status pill */
+      '.status-pill { display:inline-block; padding:2px 7px; border-radius:4px; font-size:8px; font-weight:600; white-space:nowrap; }' +
+
+      /* Footer */
+      '.doc-footer { margin-top:24px; padding-top:10px; border-top:1px solid #e0e0e0; display:flex; justify-content:space-between; font-size:8px; color:#aaa; }' +
+    '</style></head><body>' +
+
+    '<div class="doc-header">' +
+      '<div>' +
+        '<div class="doc-logo">Fusaro Impianti S.r.l.</div>' +
+        '<div class="doc-title">Piano di Lavoro</div>' +
+      '</div>' +
+      '<div class="doc-meta">' +
+        'Adria (RO) · P.IVA 01415100294<br>' +
+        'Data: ' + today + '<br>' +
+        (groupId ? 'Gruppo: ' + esc((findGroup(groupId)||{}).label||'') : 'Esportazione completa') +
+      '</div>' +
+    '</div>' +
+
+    '<div class="summary">' +
+      '<div class="pill"><div class="pill-label">Totale attività</div><div class="pill-value">' + totTask + '</div></div>' +
+      '<div class="pill"><div class="pill-label">Completate</div><div class="pill-value green">' + totDone + '</div></div>' +
+      '<div class="pill"><div class="pill-label">In corso</div><div class="pill-value yellow">' + totPartial + '</div></div>' +
+      '<div class="pill"><div class="pill-label">Ore rimanenti</div><div class="pill-value red">' + fmt(totRim) + '</div></div>' +
+      '<div class="pill"><div class="pill-label">Ore totali</div><div class="pill-value">' + fmt(totOre) + '</div></div>' +
+    '</div>' +
+
+    groupsHtml +
+
+    '<div class="doc-footer">' +
+      '<span>Fusaro Impianti S.r.l. — Piano di Lavoro</span>' +
+      '<span>Generato il ' + today + '</span>' +
+    '</div>' +
+
+  '</body></html>';
+
+  // Open in new window and print
+  var win = window.open('', '_blank', 'width=900,height=700');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+  // Give browser time to render before print dialog
+  setTimeout(function() { win.print(); }, 600);
 }
 
 // ─────────────────────────────────────────────
