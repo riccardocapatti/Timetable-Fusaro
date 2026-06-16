@@ -122,6 +122,7 @@ function render() {
   const tbody = document.getElementById('table-body');
   tbody.innerHTML = '';
   appData.groups.forEach(group => {
+    if (group.archived) return; // never show archived in main view
     const c = GROUP_COLORS[group.colorIdx % GROUP_COLORS.length];
     renderGroupHeader(tbody, group, c);
     group.tasks.forEach(task => renderTaskRow(tbody, task, group, c));
