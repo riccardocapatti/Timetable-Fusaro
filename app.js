@@ -708,18 +708,18 @@ function exportPdf(groupId) {
     '<title>Piano di Lavoro – Fusaro Impianti S.r.l.</title>' +
     '<style>' +
       '* { box-sizing:border-box; margin:0; padding:0; }' +
-      'body { font-family: "Helvetica Neue",Arial,sans-serif; font-size:11px; color:#1a1d27; background:#fff; padding:20mm 16mm; }' +
-      '@page { size:A4; margin:15mm 14mm; }' +
+      'body { font-family: "Helvetica Neue",Arial,sans-serif; font-size:11px; color:#1a1d27; background:#fff; padding:4mm 0; }' +
+      '@page { size:A4; margin:10mm 12mm; }' +
 
       /* Header */
-      '.doc-header { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #1a1d27; padding-bottom:10px; margin-bottom:18px; }' +
+      '.doc-header { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #1a1d27; padding-bottom:7px; margin-bottom:10px; }' +
       '.doc-logo { font-size:9px; font-weight:800; letter-spacing:.2em; text-transform:uppercase; color:#444; }' +
       '.doc-title { font-size:22px; font-weight:900; letter-spacing:-.03em; color:#1a1d27; line-height:1; }' +
       '.doc-meta { text-align:right; font-size:9px; color:#888; line-height:1.7; }' +
 
       /* Summary pills */
-      '.summary { display:flex; gap:10px; margin-bottom:20px; }' +
-      '.pill { flex:1; border:1px solid #e0e0e0; border-radius:6px; padding:8px 12px; }' +
+      '.summary { display:flex; gap:8px; margin-bottom:12px; }' +
+      '.pill { flex:1; border:1px solid #e0e0e0; border-radius:6px; padding:5px 8px; }' +
       '.pill-label { font-size:8px; letter-spacing:.12em; text-transform:uppercase; color:#888; }' +
       '.pill-value { font-size:18px; font-weight:800; color:#1a1d27; }' +
       '.pill-value.green  { color:#1a6040; }' +
@@ -727,8 +727,8 @@ function exportPdf(groupId) {
       '.pill-value.red    { color:#c0392b; }' +
 
       /* Group block */
-      '.group-block { margin-bottom:18px; page-break-inside:avoid; }' +
-      '.group-header { display:flex; justify-content:space-between; align-items:center; background:#f5f5f5; padding:8px 12px; margin-bottom:0; }' +
+      '.group-block { margin-bottom:10px; page-break-inside:avoid; }' +
+      '.group-header { display:flex; justify-content:space-between; align-items:center; background:#f5f5f5; padding:5px 10px; margin-bottom:0; }' +
       '.group-name { font-size:10px; font-weight:700; letter-spacing:.15em; text-transform:uppercase; color:#1a1d27; }' +
       '.group-stats { display:flex; gap:14px; font-size:9px; color:#666; }' +
       '.group-stats b { color:#1a1d27; }' +
@@ -736,9 +736,9 @@ function exportPdf(groupId) {
       /* Table */
       'table { width:100%; border-collapse:collapse; font-size:10px; }' +
       'thead tr { background:#1a1d27; color:#fff; }' +
-      'th { padding:6px 10px; text-align:left; font-size:8px; letter-spacing:.1em; text-transform:uppercase; font-weight:600; }' +
+      'th { padding:4px 8px; text-align:left; font-size:8px; letter-spacing:.1em; text-transform:uppercase; font-weight:600; }' +
       'th.center { text-align:center; }' +
-      'td { padding:7px 10px; border-bottom:1px solid #eee; vertical-align:top; }' +
+      'td { padding:4px 8px; border-bottom:1px solid #eee; vertical-align:top; }' +
       'td.center { text-align:center; vertical-align:middle; }' +
       'tr.done td { opacity:.5; }' +
       'tr.done .name-accent { text-decoration:line-through; }' +
