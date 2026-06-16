@@ -1116,6 +1116,32 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ─────────────────────────────────────────────
+// COLLAPSE / EXPAND ALL
+// ─────────────────────────────────────────────
+function setAllGroupsCollapsed(collapse) {
+  appData.groups.forEach(function(g) {
+    if (g.archived) return;
+    g.collapsed = collapse;
+    if (typeof dbSaveGroupMeta === 'function') dbSaveGroupMeta(g);
+  });
+  render();
+  // Update button label
+  var btn   = document.getElementById('btn-collapse-all');
+  var label = document.getElementById('collapse-all-label');
+  if (btn && label) {
+    label.textContent = collapse ? 'Espandi tutti' : 'Comprimi tutti';
+    btn.dataset.collapsed = collapse ? '1' : '0';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var btn = document.getElementById('btn-collapse-all');
+  if (btn) btn.addEventListener('click', function() {
+    setAllGroupsCollapsed(this.dataset.collapsed !== '1');
+  });
+});
+
+// ─────────────────────────────────────────────
 // TRASFERTE
 // ─────────────────────────────────────────────
 function renderTrasferte() {
