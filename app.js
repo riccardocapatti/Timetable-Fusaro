@@ -1064,7 +1064,7 @@ var currentTheme = localStorage.getItem('fusaro_theme') || 'dark';
 //   2. Update every "?v=" query string in BOTH timetable.html
 //      and index.html to match (script tags AND the CSS link)
 // ═══════════════════════════════════════════════════════════
-var CURRENT_VERSION = 'v0.07';
+var CURRENT_VERSION = 'v0.08';
 applyTheme(currentTheme);
 
 document.querySelectorAll('.theme-opt').forEach(function(btn) {
@@ -1612,6 +1612,11 @@ function deleteTrasferta(id) {
 // VERSION PANEL
 // ─────────────────────────────────────────────
 var VERSION_HISTORY = [
+  {
+    v: 'v0.08', date: '2026-06-16',
+    files: ['app.js', 'timetable.html', 'style.css'],
+    desc: 'Esportazione PDF riprogettata: generata interamente da appData, indipendente dal DOM. Funziona su mobile, esclude gruppi archiviati, espande gruppi compressi, layout professionale e compatto. Aggiunto Comprimi/Espandi tutti in Menu → Vista, funziona su mobile e desktop. Corretto bug: gruppi archiviati visibili nella vista tabella desktop.'
+  },
   {
     v: 'v0.07', date: '2026-06-08',
     files: ['app.js', 'users.js', 'db.js', 'style.css', 'index-auth.js'],
