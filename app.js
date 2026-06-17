@@ -1051,7 +1051,20 @@ function applyTheme(theme) {
 }
 
 var currentTheme = localStorage.getItem('fusaro_theme') || 'dark';
-var CURRENT_VERSION = 'v0.06';
+// ═══════════════════════════════════════════════════════════
+// ⚠️  CACHE-BUSTING REMINDER — READ BEFORE BUMPING VERSION  ⚠️
+// ═══════════════════════════════════════════════════════════
+// Every script/css tag in timetable.html and index.html has a
+// "?v=X.XX" query string matching CURRENT_VERSION below.
+// Browsers (especially mobile) aggressively cache static JS/CSS
+// on GitHub Pages, which can cause stale-code bugs that look like
+// random breakage (e.g. stuck on "Autenticazione…", old features
+// not appearing). On every version bump:
+//   1. Update CURRENT_VERSION below
+//   2. Update every "?v=" query string in BOTH timetable.html
+//      and index.html to match (script tags AND the CSS link)
+// ═══════════════════════════════════════════════════════════
+var CURRENT_VERSION = 'v0.07';
 applyTheme(currentTheme);
 
 document.querySelectorAll('.theme-opt').forEach(function(btn) {
